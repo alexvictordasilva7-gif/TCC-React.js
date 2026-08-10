@@ -5,12 +5,11 @@ import { TbUsers } from "react-icons/tb";
 
 
 export const SideBarContainer = styled.div`
-    position: fixed;
+    
     background-color: #fff;
     border-right: 1px solid #929292;
     height: 100vh;
     width: 200px;
-    z-index: 2;
     `
 
 export const SideBardiv = styled.div`

@@ -2,9 +2,7 @@ import "./SideBar.Styled.jsx";
 import * as S from "./SideBar.Styled.jsx";
 import { Link } from "react-router-dom";
 
-function SideBar({ isOpen }) {
-  if (isOpen) {
-  }
+function SideBar() {
   return (
     <S.SideBarContainer>
       <S.SideBardiv>
@@ -14,9 +12,7 @@ function SideBar({ isOpen }) {
         
           <S.SideBarButton>     
             <S.AiOutlineHomeIcon />
-            <Link to="/dashboard">
-            Dashboard
-            </Link>
+            <Link to= "Dashboard">Dashboard</Link>
           </S.SideBarButton>
         
 
@@ -24,7 +20,7 @@ function SideBar({ isOpen }) {
         {/* Botão de Serviços + icon */}
         <S.SideBarButton>
           <S.MdOutlineDesignServicesIcon />
-          Serviços
+          <Link to="Servicos">Serviços</Link>
         </S.SideBarButton>
 
 
