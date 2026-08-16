@@ -27,14 +27,14 @@ function SideBar() {
         {/* Botão de Clientes + icon */}
         <S.SideBarButton>
           <S.TbUsersIcon />
-          Clientes
+          <Link to="Clientes">Clientes</Link>
         </S.SideBarButton>
 
 
-        <S.SideBarButton>Configurações</S.SideBarButton>
+        <S.SideBarButton>Pets</S.SideBarButton>
 
 
-        <S.SideBarButton>Sair</S.SideBarButton>
+        <S.SideBarButton>Estoque</S.SideBarButton>
 
 
       </S.SideBardiv>

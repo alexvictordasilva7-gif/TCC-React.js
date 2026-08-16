@@ -13,7 +13,7 @@ function Header() {
           <S.UserInfo>Bem-vindo </S.UserInfo>
           <S.UserInfo>Usuário</S.UserInfo>
         </S.UserInfoContainer>
-        <S.InfoBox></S.InfoBox>
+        <S.InfoBox/>
       </S.HeaderContainer>
     </S.MainHeaderWrapper>
   );
