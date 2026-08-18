@@ -1,6 +1,6 @@
 import "./SideBar.Styled.jsx";
 import * as S from "./SideBar.Styled.jsx";
-import { Link } from "react-router-dom";
+import { Link, NavLink, } from "react-router-dom";
 
 function SideBar() {
   return (
@@ -12,7 +12,7 @@ function SideBar() {
         
           <S.SideBarButton>     
             <S.AiOutlineHomeIcon />
-            <Link to= "Dashboard">Dashboard</Link>
+            <S.Nlink to= "Dashboard">Dashboard</S.Nlink>
           </S.SideBarButton>
         
 
@@ -20,14 +20,14 @@ function SideBar() {
         {/* Botão de Serviços + icon */}
         <S.SideBarButton>
           <S.MdOutlineDesignServicesIcon />
-          <Link to="Servicos">Serviços</Link>
+          <S.Nlink to="Servicos">Serviços</S.Nlink>
         </S.SideBarButton>
 
 
         {/* Botão de Clientes + icon */}
         <S.SideBarButton>
           <S.TbUsersIcon />
-          <Link to="Clientes">Clientes</Link>
+          <S.Nlink to="Clientes">Clientes</S.Nlink>
         </S.SideBarButton>
 
 

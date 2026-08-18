@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { AiOutlineHome } from "react-icons/ai";
 import { MdOutlineDesignServices } from "react-icons/md";
 import { TbUsers } from "react-icons/tb";
+import { Link, NavLink } from "react-router-dom";
 
 
 export const SideBarContainer = styled.div`
@@ -54,4 +55,6 @@ export const TbUsersIcon = styled(TbUsers)`
   font-size: 20px;
   margin-right: 10px;
 `;
-
+export const Nlink = styled(NavLink)`
+  text-decoration:none;
+`;
