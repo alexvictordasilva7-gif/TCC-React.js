@@ -10,7 +10,7 @@ export const BotaoE = styled.button`
     cursor: pointer;
     transition: 0.3s;
 
-    &:hover {
+    &:hover{
         opacity: 0.7;
     }
 

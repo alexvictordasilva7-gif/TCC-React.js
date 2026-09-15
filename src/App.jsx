@@ -7,12 +7,9 @@ import Rotas from "./routes/Rotas.jsx";
 
 function App() {
   return (
-    
-      <BrowserRouter>
-        <Rotas />
-      </BrowserRouter>
-
-   
+    <BrowserRouter>
+      <Rotas />
+    </BrowserRouter>
   );
 }
 

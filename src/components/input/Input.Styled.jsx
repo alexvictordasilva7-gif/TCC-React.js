@@ -1,9 +1,6 @@
 import styled from "styled-components";
 
 export const Campo = styled.input`
-
-    
-
     width:300px;
     height:40px;
     font-size:16px;

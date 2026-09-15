@@ -3,13 +3,13 @@ import { LuPawPrint } from "react-icons/lu";
 
 export const MainHeaderWrapper = styled.div`
   display: flex;
-  width: 100%;
   height: 60px; 
+  
 `;
 
 export const LogoContainer = styled.div`
   display: flex;
-  width: 200px;
+  padding: 25px 10px;
   background-color: #fff;
   border-right: 1px solid #929292; 
   color: #000000; 
@@ -19,19 +19,17 @@ export const LogoContainer = styled.div`
   }
   justify-content: center;
   align-items: center;
-  
+  min-width:150px ;
 `;
 
 export const HeaderContainer = styled.header`
   background-color: #fff;
   color: white;
-  padding: 0 20px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #929292;
-  flex: 1;     
-  height: 100%;  
+  border-bottom: 1px solid #929292;  
+  width:100vw;
+  height:100%;
   justify-content: flex-end;
 `;
 
