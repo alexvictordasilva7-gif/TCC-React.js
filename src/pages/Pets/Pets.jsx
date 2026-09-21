@@ -2,7 +2,9 @@ import Button from "../../components/Button/Button";
 import Modal from "../../components/Modal/Modal";
 import Forms from "../../components/Forms/Forms";
 import Input from "../../components/Input/Input";
+import Tabela from "../../components/Tabela/Tabela.jsx";
 import { useState } from "react";
+import * as S from './Pets.Styled.jsx'
 
 function Pets() {
   const [openModal, setOpenModal] = useState(false);
@@ -14,16 +16,25 @@ function Pets() {
   const [pets, setPets] = useState([]);
   return (
     <div>
-      <div>
-        <h1>Pets</h1>
+      <S.Hpets>
+        <div>
+          <h1>Pets</h1>
+          <p>Gerencie os clientes cadastrados</p>
+        </div>
+        
         <Button
           $cor={"blue"}
           filho={"+ Pets"}
           onClick={() => setOpenModal(true)}
+          atamanho={'50px'}
+          ltamanho={'100px'}
+          fsize={'18px'}
         />
-      </div>
-
+      </S.Hpets>
+      
       <div>
+            <img width={"1080px"} src="../../../public/manutencao.jpeg" alt="" />
+
         <Modal isOpen={openModal}>
           <Forms
             hForm={

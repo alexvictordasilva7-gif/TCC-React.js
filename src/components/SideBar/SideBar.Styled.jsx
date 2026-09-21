@@ -1,7 +1,10 @@
 import styled from "styled-components";
 import { AiOutlineHome } from "react-icons/ai";
 import { MdOutlineDesignServices } from "react-icons/md";
+import { PiDogFill } from "react-icons/pi";
 import { TbUsers } from "react-icons/tb";
+import { CiBoxes } from "react-icons/ci";
+import { FaTruckLoading } from "react-icons/fa";
 import { Link, NavLink } from "react-router-dom";
 import { LuPawPrint } from "react-icons/lu";
 
@@ -47,7 +50,26 @@ export const AiOutlineHomeIcon = styled(AiOutlineHome)`
   margin-right: 10px;
 `;
 
+export const IconEsto = styled(CiBoxes)`
+  color: #000000;
+  font-size: 20px;
+  margin-right: 10px;
+`;
+
+export const IconForne = styled(FaTruckLoading)`
+  color: #000000;
+  font-size: 20px;
+  margin-right: 10px;
+`;
+
 export const MdOutlineDesignServicesIcon = styled(MdOutlineDesignServices)`
+
+  color: #000000;
+  font-size: 20px;
+  margin-right: 10px;
+`;
+
+export const IconPets = styled(PiDogFill)`
 
   color: #000000;
   font-size: 20px;

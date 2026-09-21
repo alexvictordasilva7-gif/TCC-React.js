@@ -20,7 +20,5 @@ export const Celula = styled.span`
     text-transform: uppercase;
   `}
 
-  overflow-wrap: break-word;
-  min-width: 0;
-  box-shadow: 100px;
+  
 `;

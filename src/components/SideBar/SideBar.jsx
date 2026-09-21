@@ -28,7 +28,10 @@ function SideBar() {
         </S.SideBarButton>
 
         <S.SideBarButton>
-          <S.Nlink to="Pets">Pets</S.Nlink>
+          <S.Nlink to="Pets">
+            <S.IconPets/>
+            Pets
+          </S.Nlink>
         </S.SideBarButton>
 
           {/* Botão de Serviços + icon */}
@@ -39,7 +42,20 @@ function SideBar() {
           </S.Nlink>
         </S.SideBarButton>
 
-        <S.SideBarButton>Estoque</S.SideBarButton>
+        <S.SideBarButton>
+          <S.Nlink to="Fornecedor">
+            <S.IconForne/>
+            Fornecedor
+          </S.Nlink>
+        </S.SideBarButton>
+
+        <S.SideBarButton>
+          <S.Nlink to="Estoque">
+            <S.IconEsto />
+            Estoque
+          </S.Nlink>
+        </S.SideBarButton>
+
       </S.SideBardiv>
     </S.SideBarContainer>
   );

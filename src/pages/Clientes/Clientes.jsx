@@ -4,7 +4,8 @@ import Button from "../../components/Button/Button";
 import Form from "../../components/Forms/Forms";
 import Tabela from "../../components/Tabela/Tabela";
 import * as S from "./Clientes.Styled";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import api from "../../service/api";
 
 const Clientes = () => {
   const [openModal, setOpenModal] = useState(false);
@@ -14,19 +15,51 @@ const Clientes = () => {
   const [endereco, setEndereco] = useState("");
   const [clientes, setClientes] = useState([]);
 
+  useEffect(() => {
+    async function carregarClientes() {
+      try {
+        const resposta = await api.get('/api/tutores');
+        setClientes(resposta.data.content);
+      } catch (erro) {
+        console.error("Erro ao carregar clientes:", erro);
+      }
+    }
+    carregarClientes();
+  }, []);
+
+
+  async function deletarCliente(id) {
+     console.log("id recebido:", id);
+  try {
+    await api.delete(`/api/tutores/${id}`);
+    setClientes(clientes.filter((cliente) => cliente.id !== id));
+  } catch (erro) {
+    console.error("Erro ao deletar cliente:", erro);
+    alert("Não foi possível deletar o cliente. Tente novamente.");
+  }
+}
+
+
   // função criada para adiciona clientes, e essa função e ativado pelo botão adicionar
-  function addCliente() {
+  async function addCliente() {
     const novoCliente = { nome, email, telefone, endereco };
 
-    setClientes([...clientes, novoCliente]);
+    try {
+    const resposta = await api.post('/api/tutores', novoCliente);
+    setClientes([...clientes, resposta.data]);
 
     setNome("");
     setEmail("");
     setTelefone("");
     setEndereco("");
-
     setOpenModal(false);
+  } catch (erro) {
+    console.error("Erro ao cadastrar cliente:", erro);
+    alert("Não foi possível cadastrar o cliente. Tente novamente.");
   }
+    }
+
+    
 
   return (
     <div>
@@ -40,6 +73,9 @@ const Clientes = () => {
           $cor={"blue"}
           filho={"+ Cliente"}
           onClick={() => setOpenModal(true)}
+          atamanho={'50px'}
+          ltamanho={'100px'}
+          fsize={'18px'}
         />
       </S.Hcliente>
 
@@ -56,7 +92,7 @@ const Clientes = () => {
             <S.Celula key={`Acões-${index}`}>
               <div>
                 <Button $cor={"transparent"} filho={<S.Edi />} />
-                <Button $cor={"transparent"} filho={<S.Del />} />
+                <Button onClick={()=> deletarCliente(cliente.id)} $cor={"transparent"} filho={<S.Del />} />
               </div>
             </S.Celula>
           </>

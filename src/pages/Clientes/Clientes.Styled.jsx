@@ -27,8 +27,7 @@ export const Celula = styled.span`
     text-transform: uppercase;
   `}
 
-  overflow-wrap: break-word;
-  min-width: 0;
+ 
 `;
 
 export const Del = styled(BiTrash)`
@@ -40,3 +39,4 @@ export const Edi = styled(FaRegEdit)`
 color:blue;
 size:16px;
 ` 
+
