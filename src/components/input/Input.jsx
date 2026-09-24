@@ -1,13 +1,13 @@
 import * as S from "./Input.Styled"
 
 
-function Input({ placeholder, type = "text" , texto, valor, onChange}) {
+function Input({ placeholder, type = "text" , texto, valor, onChange, size}) {
     return (
         <div>
             <div>
                 <label>{texto}</label>
             </div>
-            <S.Campo onChange={onChange} value={valor} type={type} placeholder={placeholder} />
+            <S.Campo fsize={size} onChange={onChange} value={valor} type={type} placeholder={placeholder} />
         </div>
         
     )

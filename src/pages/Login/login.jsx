@@ -3,43 +3,40 @@ import "./Login.Styled.jsx";
 import { Link } from "react-router-dom";
 import * as S from "./Login.Styled.jsx";
 import Input from "../../components/Input/Input.jsx";
-import Button from  "../../components/Button/Button.jsx"
-
+import Button from "../../components/Button/Button.jsx";
 
 function Login() {
   return (
     <S.TelaLogin>
       <S.Clogin>
-        
-        <S.ContImg>
-          <S.Limg src="../../../public/Logotemporario.png" alt="" href="" />
-          <h1>Login</h1>
-        </S.ContImg>
-        
+        {" "}
+        {/*Container login */}
+        <S.Hdiv>
+          {" "}
+          {/*Header login */}
+          <S.ContImg>
+            {" "}
+            {/*Container imagem */}
+            <S.Limg src="../../../public/Patinha.png" alt="" href="" />
+          </S.ContImg>
+          <S.Cdiv>
+            <h1>Pet Shop</h1>
+            <p>Sistema de Gerenciamento</p>
+          </S.Cdiv>
+        </S.Hdiv>
         <S.InputLogin>
-          <Input placeholder={"Email"} />
-          <Input placeholder={"Senha"}  type="password"/>
-          <S.LoginSelect name="oi" id="1">
-            <option></option>
-            <option>ADM</option>
-            <option>Funcionario</option>
-          </S.LoginSelect>
+          <Input texto={"Email"} placeholder={"exemplo@petsho.com"} />
+          <Input texto={"Senha"} placeholder={"••••••••"} type="password" />
         </S.InputLogin>
         <S.LoginFooter>
-          <S.Infolink>
-            <S.LinkLogin>Recupera senha</S.LinkLogin>
-            <S.LinkLogin>Cadastre-se</S.LinkLogin>
-          </S.Infolink>
-          
-          <Button
-          filho={<Link to={"/Dashboard"}>login</Link>}
-          $cor={"#e6aa07"}
-          $tcor={"balck"}
-           ></Button>
-
-          
+          <S.LinkLogin>Cadastre-se</S.LinkLogin>
+          <S.LinkLogin>Esqueceu a senha?</S.LinkLogin>
         </S.LoginFooter>
+        <Button filho={"Entra"} />
       </S.Clogin>
+      <S.Ddiv>
+        <p>© 2026 Pet Shop - Todos os direitos reservados</p>
+      </S.Ddiv>
     </S.TelaLogin>
   );
 }
