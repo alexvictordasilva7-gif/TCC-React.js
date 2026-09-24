@@ -13,7 +13,7 @@ export const GapText = styled.div`
    flex-direction:column;
 `
 
-export const Hpet = styled.div`
+export const Hagendamentos = styled.div`
    display:flex;
    justify-content:space-between;
    margin-bottom:20px;

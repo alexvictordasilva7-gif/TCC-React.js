@@ -1,10 +1,9 @@
 import styled from "styled-components";
-import { AiOutlineHome } from "react-icons/ai";
-import { MdOutlineDesignServices } from "react-icons/md";
+import { AiOutlineHome, AiOutlineCalendar } from "react-icons/ai";
 import { PiDogFill } from "react-icons/pi";
 import { TbUsers } from "react-icons/tb";
 import { CiBoxes } from "react-icons/ci";
-import { FaTruckLoading } from "react-icons/fa";
+import { FaTruck, FaTools } from "react-icons/fa";
 import { Link, NavLink } from "react-router-dom";
 import { LuPawPrint } from "react-icons/lu";
 
@@ -56,14 +55,13 @@ export const IconEsto = styled(CiBoxes)`
   margin-right: 10px;
 `;
 
-export const IconForne = styled(FaTruckLoading)`
+export const IconForne = styled(FaTruck)`
   color: #000000;
   font-size: 20px;
   margin-right: 10px;
 `;
 
-export const MdOutlineDesignServicesIcon = styled(MdOutlineDesignServices)`
-
+export const IconServico = styled(FaTools)`
   color: #000000;
   font-size: 20px;
   margin-right: 10px;
@@ -81,6 +79,13 @@ export const TbUsersIcon = styled(TbUsers)`
   font-size: 20px;
   margin-right: 10px;
 `;
+
+export const IconAgenda = styled(AiOutlineCalendar)`
+  color: #000000;
+  font-size: 20px;
+  margin-right: 10px;
+`;
+
 export const Nlink = styled(NavLink)`
   text-decoration:none;
   color: #000000;
@@ -113,5 +118,3 @@ export const Icon = styled(LuPawPrint)`
   font-size: 32px; 
   margin-right: 10px;
 `;
-
-
