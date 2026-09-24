@@ -37,7 +37,7 @@ function SideBar() {
           {/* Botão de Serviços + icon */}
         <S.SideBarButton>
           <S.Nlink to="Servicos">
-            <S.MdOutlineDesignServicesIcon />
+            <S.IconServico />
             Serviços
           </S.Nlink>
         </S.SideBarButton>
@@ -53,6 +53,14 @@ function SideBar() {
           <S.Nlink to="Estoque">
             <S.IconEsto />
             Estoque
+          </S.Nlink>
+        </S.SideBarButton>
+
+        {/* Botão de Agendamentos + icon */}
+        <S.SideBarButton>
+          <S.Nlink to="Agendamentos">
+            <S.IconAgenda />
+            Agendamentos
           </S.Nlink>
         </S.SideBarButton>
 

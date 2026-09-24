@@ -8,6 +8,7 @@ import Login from '../pages/login/login.jsx'
 import Cadastro from '../pages/Cadastro/Cadastro.jsx'
 import Estoque from '../pages/Estoque/Estoque.jsx';
 import Fornecedor from '../pages/Fornecedor/Fornecedor.jsx';
+import Agendamentos from '../pages/Agendamentos/Agendamentos.jsx';
 import Financeiro from '../pages/Financeiro/Financeiro.jsx';
 
 function Rotas(){
@@ -25,6 +26,7 @@ function Rotas(){
                 <Route path='/Pets' element={<Pets/>}/>
                 <Route path='/Estoque' element={<Estoque/>}/>
                 <Route path='/Fornecedor' element={<Fornecedor/>}/>
+                <Route path='/Agendamentos' element={<Agendamentos/>}/>
                 
             </Route>
         </Routes>
