@@ -92,10 +92,18 @@ export const Nlink = styled(NavLink)`
   font-size: 18px;
   &.active {
     color: #0352fa;
+    background-color: #0f348341;
+};
 
-    svg {
-      color: #0352fa;
-    }}
+display: flex;
+border: none;
+align-items: start;
+border-radius: 5px;
+color: #000000;
+padding: 10px;
+
+cursor: pointer;
+font-size: 18px;
 
 `;
 

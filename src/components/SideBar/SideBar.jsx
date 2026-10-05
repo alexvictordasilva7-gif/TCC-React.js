@@ -11,58 +11,57 @@ function SideBar() {
       <S.SideBardiv>
         {/* Botão do Dashboard + icon*/}
 
-        <S.SideBarButton>
           <S.Nlink to="Dashboard">
             <S.AiOutlineHomeIcon />
             Dashboard
           </S.Nlink>
-        </S.SideBarButton>
+     
 
 
         {/* Botão de Clientes + icon */}
-        <S.SideBarButton>
+        
           <S.Nlink to="Clientes">
             <S.TbUsersIcon />
             Clientes
           </S.Nlink>
-        </S.SideBarButton>
+        
 
-        <S.SideBarButton>
+   
           <S.Nlink to="Pets">
             <S.IconPets/>
             Pets
           </S.Nlink>
-        </S.SideBarButton>
+       
 
           {/* Botão de Serviços + icon */}
-        <S.SideBarButton>
+    
           <S.Nlink to="Servicos">
             <S.IconServico />
             Serviços
           </S.Nlink>
-        </S.SideBarButton>
+        
 
-        <S.SideBarButton>
+       
           <S.Nlink to="Fornecedor">
             <S.IconForne/>
             Fornecedor
           </S.Nlink>
-        </S.SideBarButton>
+        
 
-        <S.SideBarButton>
+        
           <S.Nlink to="Estoque">
             <S.IconEsto />
             Estoque
           </S.Nlink>
-        </S.SideBarButton>
+      
 
         {/* Botão de Agendamentos + icon */}
-        <S.SideBarButton>
+     
           <S.Nlink to="Agendamentos">
             <S.IconAgenda />
             Agendamentos
           </S.Nlink>
-        </S.SideBarButton>
+    
 
       </S.SideBardiv>
     </S.SideBarContainer>
