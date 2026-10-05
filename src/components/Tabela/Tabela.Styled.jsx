@@ -10,8 +10,7 @@ export const TabelaCaixa = styled.div`
 `;
 
 export const Celula = styled.span`
-  padding: 12px 16px;
-  border-bottom: 1px solid #eee;
+  padding:10px;
 
   ${(props) =>
     props.$cabecalho &&

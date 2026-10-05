@@ -100,3 +100,8 @@ export const Cdiv = styled.div`
     align-items:center;
     
 `
+
+export const LinkB = styled(Link)`
+    Color:#fff;
+    text-decoration:none;
+`

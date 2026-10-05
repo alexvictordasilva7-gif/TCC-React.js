@@ -4,7 +4,7 @@ import { PiDogFill } from "react-icons/pi";
 import { TbUsers } from "react-icons/tb";
 import { CiBoxes } from "react-icons/ci";
 import { FaTruck, FaTools } from "react-icons/fa";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom"; 
 import { LuPawPrint } from "react-icons/lu";
 
 export const SideBarContainer = styled.div`
@@ -92,10 +92,16 @@ export const Nlink = styled(NavLink)`
   font-size: 18px;
   &.active {
     color: #0352fa;
-
-    svg {
-      color: #0352fa;
-    }}
+    background-color: #0352fa75;
+  }
+display: flex;
+border: none;
+align-items: start;
+border-radius: 5px;
+color: #000000;
+padding: 10px;
+cursor: pointer;
+font-size: 18px;
 
 `;
 

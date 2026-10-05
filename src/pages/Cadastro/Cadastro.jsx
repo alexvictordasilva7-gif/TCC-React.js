@@ -1,31 +1,35 @@
-
 import { Link } from "react-router-dom";
+import * as S from "./Cadastro.Styled.jsx";
+import Input from "../../components/Input/Input";
+import Button from "../../components/Button/Button.jsx";
 
-function Cadastro(){
-    return(
-        <div className="tela">
-            <div className="login">
-                <img src="https://cdn.mindminers.com/blog/uploads/2022/11/pets.png" alt="" />
-                <h1>Pet Shop</h1>
-                <p>Sistema de gerenciamento</p>
+function Cadastro() {
+  return (
+    <S.TelaCadastro>
+      <S.Ccadastro>
+        <S.Hdiv>
+           
+        <S.Cdiv>
+            <S.Pata/>
+            <h1>Cadastro</h1>
+        </S.Cdiv>
+        </S.Hdiv>
+        
+        <S.InputCadas>
+          <Input texto={"Nome"} />
+          <Input texto={"Email"} />
+          <Input texto={"CNPJ"} />
+          <Input texto={"Senha"} />
+          <Input texto={"Repita senha"} />
+        </S.InputCadas>
 
-                <form className="formInput">
-                    <p>nome </p>
-                    <input type="text" placeholder="Nome completo" />
-                    <p>Email</p>
-                    <input type="text" placeholder="Email"/>
-                    <p>senha</p>
-                    <input type="password" placeholder="Senha"/>
-                    <div>
-                        <a href="">esqueceu a senha</a>
-                    </div>
-                    <Link to="/">Fazer login</Link>
-                </form>
-            
-            
-            </div>
-        </div>
-    )
+        <S.CadFooter>
+          <S.LinkCadastro to="/Login">Fazer login</S.LinkCadastro>
+        </S.CadFooter>
+        <Button filho={"Cadastra"} />
+      </S.Ccadastro>
+    </S.TelaCadastro>
+  );
 }
 
 export default Cadastro;

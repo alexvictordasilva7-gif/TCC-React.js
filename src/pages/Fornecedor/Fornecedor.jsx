@@ -24,7 +24,7 @@ const Fornecedor = () => {
   useEffect(() => {
     async function carregarFornecedores() {
       try {
-        const resposta = await api.get('/api/fornecedores');
+        const resposta = await api.get("/api/fornecedores");
         setFornecedores(resposta.data.content);
       } catch (erro) {
         console.error("Erro ao carregar fornecedores:", erro);
@@ -33,42 +33,50 @@ const Fornecedor = () => {
     carregarFornecedores();
   }, []);
 
-
   async function deletarFornecedor(id) {
-     console.log("id recebido:", id);
-  try {
-    await api.delete(`/api/fornecedores/${id}`);
-    setFornecedores(fornecedores.filter((fornecedor) => fornecedor.id !== id));
-  } catch (erro) {
-    console.error("Erro ao deletar fornecedor:", erro);
-    alert("Não foi possível deletar o fornecedor. Tente novamente.");
+    console.log("id recebido:", id);
+    try {
+      await api.delete(`/api/fornecedores/${id}`);
+      setFornecedores(
+        fornecedores.filter((fornecedor) => fornecedor.id !== id),
+      );
+    } catch (erro) {
+      console.error("Erro ao deletar fornecedor:", erro);
+      alert("Não foi possível deletar o fornecedor. Tente novamente.");
+    }
   }
-}
-
 
   // função criada para adicionar fornecedores, e essa função e ativada pelo botão cadastrar
   async function addFornecedor() {
-    const novoFornecedor = { razaoSocial, cnpj, categoria, nomeContato, telefone, email, endereco, status };
+    const novoFornecedor = {
+      razaoSocial,
+      cnpj,
+      categoria,
+      nomeContato,
+      telefone,
+      email,
+      endereco,
+      status,
+    };
 
     try {
-    const resposta = await api.post('/api/fornecedores', novoFornecedor);
-    setFornecedores([...fornecedores, resposta.data]);
+      const resposta = await api.post("/api/fornecedores", novoFornecedor);
+      setFornecedores([...fornecedores, resposta.data]);
 
-    setRazaoSocial("");
-    setCnpj("");
-    setCategoria("");
-    setNomeContato("");
-    setTelefone("");
-    setEmail("");
-    setEndereco("");
-    setStatus("Ativo");
-    setOpenModal(false);
-  } catch (erro) {
-    console.error("Erro ao cadastrar fornecedor:", erro);
-    alert("Não foi possível cadastrar o fornecedor. Tente novamente.");
-  }
+      setRazaoSocial("");
+      setCnpj("");
+      setCategoria("");
+      setNomeContato("");
+      setTelefone("");
+      setEmail("");
+      setEndereco("");
+      setStatus("Ativo");
+      setOpenModal(false);
+    } catch (erro) {
+      console.error("Erro ao cadastrar fornecedor:", erro);
+      alert("Não foi possível cadastrar o fornecedor. Tente novamente.");
     }
-
+  }
 
   const totalFornecedores = fornecedores.length;
   const ativos = fornecedores.filter((f) => f.status === "Ativo").length;
@@ -85,7 +93,6 @@ const Fornecedor = () => {
       );
     });
 
-
   return (
     <div>
       <S.Hfornecedor>
@@ -93,15 +100,16 @@ const Fornecedor = () => {
           <h1>Fornecedores</h1>
           <p>{totalFornecedores} fornecedores cadastrados</p>
         </div>
-
-        <Button
-          $cor={"blue"}
-          filho={"+ Novo Fornecedor"}
-          onClick={() => setOpenModal(true)}
-          atamanho={'50px'}
-          ltamanho={'170px'}
-          fsize={'18px'}
-        />
+        <div>
+          <Button
+            $cor={"blue"}
+            filho={"+ Novo Fornecedor"}
+            onClick={() => setOpenModal(true)}
+            atamanho={"100%"}
+            ltamanho={"100%"}
+            fsize={"16px"}
+          />
+        </div>
       </S.Hfornecedor>
 
       <S.StatsRow>
@@ -153,7 +161,10 @@ const Fornecedor = () => {
           <S.Tab $ativo={filtro === "Ativo"} onClick={() => setFiltro("Ativo")}>
             Ativos ({ativos})
           </S.Tab>
-          <S.Tab $ativo={filtro === "Inativo"} onClick={() => setFiltro("Inativo")}>
+          <S.Tab
+            $ativo={filtro === "Inativo"}
+            onClick={() => setFiltro("Inativo")}
+          >
             Inativos ({inativos})
           </S.Tab>
         </S.Tabs>
@@ -161,7 +172,14 @@ const Fornecedor = () => {
 
       <S.TabelaWrapper>
         <Tabela
-          colunas={["Fornecedor", "Categoria", "Contato", "CNPJ", "Status", "Acões"]}
+          colunas={[
+            "Fornecedor",
+            "Categoria",
+            "Contato",
+            "CNPJ",
+            "Status",
+            "Acões",
+          ]}
           dados={fornecedoresFiltrados}
           renderLinha={(fornecedor, index) => (
             <>
@@ -190,7 +208,11 @@ const Fornecedor = () => {
               <S.Celula key={`Acões-${index}`}>
                 <div>
                   <Button $cor={"transparent"} filho={<S.Edi />} />
-                  <Button onClick={()=> deletarFornecedor(fornecedor.id)} $cor={"transparent"} filho={<S.Del />} />
+                  <Button
+                    onClick={() => deletarFornecedor(fornecedor.id)}
+                    $cor={"transparent"}
+                    filho={<S.Del />}
+                  />
                 </div>
               </S.Celula>
             </>

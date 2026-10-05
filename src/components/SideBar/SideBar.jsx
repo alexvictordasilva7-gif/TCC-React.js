@@ -11,13 +11,10 @@ function SideBar() {
       <S.SideBardiv>
         {/* Botão do Dashboard + icon*/}
 
-        <S.SideBarButton>
+        
           <S.Nlink to="Dashboard">
             <S.AiOutlineHomeIcon />
-            Dashboard
-          </S.Nlink>
-        </S.SideBarButton>
-
+            Dashboard          </S.Nlink>
 
         {/* Botão de Clientes + icon */}
         <S.SideBarButton>
