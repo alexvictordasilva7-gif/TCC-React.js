@@ -70,15 +70,17 @@ const Pets = () => {
           <h1>Pets</h1>
           <p>Gerencie os pets cadastrados</p>
         </div>
-
+        <div>
         <Button
           $cor={"blue"}
-          filho={"+ Pet"}
+          filho={"+ Novo Fornecedor"}
           onClick={() => setOpenModal(true)}
-          atamanho={'50px'}
-          ltamanho={'100px'}
+          atamanho={"100%"}
+          ltamanho={"200px"}
           fsize={'18px'}
         />
+        </div>
+        
       </S.Hpet>
 
       <Tabela
