@@ -1,0 +1,13 @@
+@import url('https://googleapis.com');
+
+* {
+  /* Isso força TODOS os elementos (h1, p, button) a usarem a fonte */
+  font-family: 'Bungee Spice', sans-serif !important; 
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+

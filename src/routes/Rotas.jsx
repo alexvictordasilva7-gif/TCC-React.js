@@ -9,7 +9,6 @@ import Cadastro from '../pages/Cadastro/Cadastro.jsx'
 import Estoque from '../pages/Estoque/Estoque.jsx';
 import Fornecedor from '../pages/Fornecedor/Fornecedor.jsx';
 import Agendamentos from '../pages/Agendamentos/Agendamentos.jsx';
-import Financeiro from '../pages/Financeiro/Financeiro.jsx';
 
 function Rotas(){
     return(

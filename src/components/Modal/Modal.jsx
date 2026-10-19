@@ -1,21 +1,13 @@
-import Clientes from '../../pages/Clientes/Clientes';
-import * as S from './Modal.Styled';
-import { useState } from 'react';
+import * as S from "./Modal.Styled";
 
+function Modal({ isOpen, children, largura = 520 }) {
+  if (!isOpen) return null;
 
-function Modal({isOpen, children}) {
-    
-    if(isOpen) {
-        return (
-            <S.BackModal>
-                <S.ModalContent>
-                    {children}
-                </S.ModalContent>
-                    
-            </S.BackModal>
-        );
-    }
-    return null;
-};
+  return (
+    <S.BackModal>
+      <S.ModalContent $largura={largura}>{children}</S.ModalContent>
+    </S.BackModal>
+  );
+}
 
 export default Modal;

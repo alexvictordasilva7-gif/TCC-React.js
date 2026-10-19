@@ -1,181 +1,508 @@
 import Modal from "../../components/Modal/Modal";
-import Input from "../../components/Input/Input";
+import Input from "../../components/Input/Input.jsx";
+import { useDados } from "../../context/DadosContext";
+import Select from "../../components/Select/Select.jsx";
+import Checkbox from "../../components/CheckBox/CheckBox.jsx";
 import Button from "../../components/Button/Button";
+import ButtonX from "../../components/Button/ButtonX.jsx";
+import Tabela from "../../components/TabelaTeste/TabelaT.jsx";
+import BarraFiltro from "../../components/Filtro/BarraFiltro.jsx";
+import { X } from "lucide-react";
 import Form from "../../components/Forms/Forms";
-import Tabela from "../../components/Tabela/Tabela";
 import * as S from "./Agendamentos.Styled";
 import { useEffect, useState } from "react";
 import api from "../../service/api";
 
 const Agendamentos = () => {
   const [openModal, setOpenModal] = useState(false);
-  const [pet, setPet] = useState("");
-  const [tutor, setTutor] = useState("");
+
+  const [editandoId, setEditandoId] = useState(null);
+  const [observacao, setObservacao] = useState("");
+  const [busca, setBusca] = useState("");
+  const [filtroAtivo, setFiltroAtivo] = useState("todos");
+  const { clientes, pets, servicos, agendamentos, setAgendamentos } =
+    useDados();
+
+  const [petId, setPetId] = useState("");
+  const [servicosIds, setServicosIds] = useState([]);
   const [data, setData] = useState("");
   const [horario, setHorario] = useState("");
-  const [servico, setServico] = useState("");
-  const [valor, setValor] = useState("");
-  const [observacoes, setObservacoes] = useState("");
-  const [agendamentos, setAgendamentos] = useState([]);
 
+  // Converte a resposta do Java para o formato usado na tela
+  function formatarAgendamento(a) {
+    return {
+      id: a.id,
+      pet: a.pet,
+      servico: a.servico,
+      valor:
+  servicos.find((s) => s.nome === a.servico)?.valor ??
+  servicos.find((s) => s.nome === a.servico)?.preco ??
+  a.valor ??
+  null,
+      data: a.dataHora?.slice(0, 10),
+      horario: a.dataHora?.slice(11, 16),
+      observacao: a.observacao ?? "",
+      status: String(a.status ?? "AGENDADO").toUpperCase(),
+    };
+  }
+
+  // Busca os agendamentos no backend
   useEffect(() => {
     async function carregarAgendamentos() {
       try {
-        const resposta = await api.get('/api/agendamentos');
-        setAgendamentos(resposta.data.content);
+        const resposta = await api.get("/api/agendamentos?size=200");
+
+        console.log("Resposta dos agendamentos:", resposta.data);
+
+        const lista = resposta.data.content ?? resposta.data;
+
+        setAgendamentos(lista.map(formatarAgendamento));
       } catch (erro) {
-        console.error("Erro ao carregar agendamentos:", erro);
+        console.error("Status HTTP:", erro.response?.status);
+        console.error("Resposta do backend:", erro.response?.data);
+        console.error("URL requisitada:", erro.config?.url);
       }
     }
+
     carregarAgendamentos();
-  }, []);
+  }, [setAgendamentos]);
 
+  const contar = (status) =>
+    agendamentos.filter((a) => a.status === status).length;
 
-  async function deletarAgendamento(id) {
-     console.log("id recebido:", id);
-  try {
-    await api.delete(`/api/agendamentos/${id}`);
-    setAgendamentos(agendamentos.filter((agendamento) => agendamento.id !== id));
-  } catch (erro) {
-    console.error("Erro ao deletar agendamento:", erro);
-    alert("Não foi possível deletar o agendamento. Tente novamente.");
-  }
-}
+  const filtros = [
+    { chave: "todos", rotulo: "Todos", quantidade: agendamentos.length },
+    { chave: "AGENDADO", rotulo: "Agendado", quantidade: contar("AGENDADO") },
+    {
+      chave: "CONCLUIDO",
+      rotulo: "Concluído",
+      quantidade: contar("CONCLUIDO"),
+    },
+    {
+      chave: "CANCELADO",
+      rotulo: "Cancelado",
+      quantidade: contar("CANCELADO"),
+    },
+  ];
 
+  function iniciarEdicao(a) {
+    const petEncontrado = pets.find(
+      (p) => p.nome === a.pet || p.id === a.petId,
+    );
 
-  // função criada para adicionar agendamentos, e essa função e ativada pelo botão adicionar
-  async function addAgendamento() {
-    const novoAgendamento = { pet, tutor, data, horario, servico, valor, observacoes };
+    const servicoEncontrado = servicos.find(
+      (s) => s.nome === a.servico || s.id === a.servicoId,
+    );
 
-    try {
-    const resposta = await api.post('/api/agendamentos', novoAgendamento);
-    setAgendamentos([...agendamentos, resposta.data]);
-
-    setPet("");
-    setTutor("");
-    setData("");
-    setHorario("");
-    setServico("");
-    setValor("");
-    setObservacoes("");
-    setOpenModal(false);
-  } catch (erro) {
-    console.error("Erro ao cadastrar agendamento:", erro);
-    alert("Não foi possível cadastrar o agendamento. Tente novamente.");
-  }
+    if (!petEncontrado || !servicoEncontrado) {
+      alert("Não foi possível localizar o pet ou o serviço deste agendamento.");
+      return;
     }
 
+    let dataFormatada = "";
+    let horarioFormatado = "";
 
+    if (Array.isArray(a.dataHora)) {
+      const [ano, mes, dia, hora = 0, minuto = 0] = a.dataHora;
+
+      dataFormatada = `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+      horarioFormatado = `${String(hora).padStart(2, "0")}:${String(minuto).padStart(2, "0")}`;
+    } else if (a.dataHora) {
+      const valor = a.dataHora;
+
+      const partes = valor.match(/^(\d{2})-(\d{2})-(\d{4}) (\d{2}):(\d{2})/);
+
+      if (partes) {
+        dataFormatada = `${partes[3]}-${partes[2]}-${partes[1]}`;
+        horarioFormatado = `${partes[4]}:${partes[5]}`;
+      } else {
+        const dataHoraISO = valor.match(
+          /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/,
+        );
+
+        if (dataHoraISO) {
+          dataFormatada = `${dataHoraISO[1]}-${dataHoraISO[2]}-${dataHoraISO[3]}`;
+          horarioFormatado = `${dataHoraISO[4]}:${dataHoraISO[5]}`;
+        }
+      }
+    }
+
+    setEditandoId(a.id);
+    setPetId(String(petEncontrado.id));
+    setServicosIds([servicoEncontrado.id]);
+    setData(dataFormatada);
+    setHorario(horarioFormatado);
+    setObservacao(a.observacao ?? "");
+    setOpenModal(true);
+  }
+
+  async function addAgendamento() {
+    if (!petId || servicosIds.length === 0 || !data || !horario) {
+      alert("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    const [ano, mes, dia] = data.split("-");
+
+    const dados = {
+      dataHora: `${dia}-${mes}-${ano} ${horario}:00`,
+      observacao: "",
+      petID: Number(petId),
+      servicoID: Number(servicosIds[0]),
+    };
+
+    try {
+      const resposta = await api.post("/api/agendamentos", dados);
+
+      setAgendamentos((atuais) => [
+        ...atuais,
+        formatarAgendamento(resposta.data),
+      ]);
+
+      setPetId("");
+      setServicosIds([]);
+      setData("");
+      setHorario("");
+      setOpenModal(false);
+    } catch (erro) {
+      console.error("Erro ao cadastrar agendamento:", erro);
+
+      alert(
+        erro.response?.data?.message ??
+          "Não foi possível cadastrar o agendamento.",
+      );
+    }
+  }
+
+  async function excluirAgendamento(id) {
+    const confirmar = window.confirm(
+      "Tem certeza que deseja excluir este agendamento?",
+    );
+
+    if (!confirmar) return;
+
+    try {
+      await api.delete(`/api/agendamentos/${id}`);
+
+      setAgendamentos((atuais) => atuais.filter((a) => a.id !== id));
+
+      alert("Agendamento excluído com sucesso!");
+    } catch (erro) {
+      console.error(
+        "Erro ao excluir agendamento:",
+        erro.response?.data ?? erro,
+      );
+
+      alert("Não foi possível excluir o agendamento.");
+    }
+  }
+
+  async function editarAgendamento() {
+    if (!editandoId || !petId || !servicosIds.length || !data || !horario) {
+      alert("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    const [ano, mes, dia] = data.split("-");
+
+    const dados = {
+      dataHora: `${dia}-${mes}-${ano} ${horario}:00`,
+      observacao,
+      petID: Number(petId),
+      servicoID: Number(servicosIds[0]),
+    };
+
+    try {
+      const resposta = await api.put(`/api/agendamentos/${editandoId}`, dados);
+
+      setAgendamentos((atuais) =>
+        atuais.map((a) =>
+          a.id === editandoId
+            ? {
+                ...a,
+                ...formatarAgendamento(resposta.data),
+                petId: Number(petId),
+                servicoId: Number(servicosIds[0]),
+                data,
+                horario,
+                observacao,
+                pet: pets.find((p) => p.id === Number(petId))?.nome,
+                servico: servicos.find((s) => s.id === Number(servicosIds[0]))
+                  ?.nome,
+              }
+            : a,
+        ),
+      );
+
+      setEditandoId(null);
+      setPetId("");
+      setServicosIds([]);
+      setData("");
+      setHorario("");
+      setObservacao("");
+      setOpenModal(false);
+
+      alert("Agendamento alterado com sucesso!");
+    } catch (erro) {
+      console.error(
+        "Erro ao alterar agendamento:",
+        erro.response?.data ?? erro,
+      );
+
+      alert(
+        erro.response?.data?.message ??
+          "Não foi possível alterar o agendamento.",
+      );
+    }
+  }
+  // marcar ou desmarcar um serviço
+  function alternarServico(id) {
+    setServicosIds((atual) =>
+      atual.includes(id) ? atual.filter((s) => s !== id) : [...atual, id],
+    );
+  }
+
+  const buscarPet = (a) =>
+    a.pet
+      ? (pets.find((p) => p.nome === a.pet) ?? { nome: a.pet })
+      : pets.find((p) => p.id === a.petId);
+
+  const nomeDono = (a) => {
+    const pet = buscarPet(a);
+
+    return clientes.find((c) => c.id === pet?.donoId)?.nome ?? "";
+  };
+
+  const nomesServicos = (a) =>
+    a.servico ??
+    a.servicosIds
+      ?.map((id) => servicos.find((s) => s.id === id)?.nome)
+      .filter(Boolean)
+      .join(", ") ??
+    "";
+
+  // soma dos serviços marcados
+  const valorTotal = servicos
+    .filter((s) => servicosIds.includes(s.id))
+    .reduce((soma, s) => soma + Number(s.valor), 0);
+
+  async function mudarStatus(id, status) {
+    try {
+      let resposta;
+
+      if (status === "CANCELADO") {
+        resposta = await api.put(`/api/agendamentos/${id}/cancelar`);
+      } else if (status === "CONCLUIDO") {
+        resposta = await api.put(`/api/agendamentos/${id}/concluido`);
+      } else {
+        alert("Não é possível voltar o agendamento para esse status.");
+        return;
+      }
+
+      const atualizado = formatarAgendamento(resposta.data);
+
+      setAgendamentos((atuais) =>
+        atuais.map((a) => (a.id === id ? atualizado : a)),
+      );
+    } catch (erro) {
+      console.error("Erro ao mudar status:", erro.response?.data ?? erro);
+      alert("Não foi possível alterar o status no servidor.");
+    }
+  }
+
+  const visiveis = agendamentos.filter((a) => {
+    const passaFiltro = filtroAtivo === "todos" || a.status === filtroAtivo;
+    const texto = busca.toLowerCase();
+    const passaBusca = [
+      buscarPet(a)?.nome ?? "",
+      nomeDono(a),
+      nomesServicos(a),
+    ].some((campo) => campo.toLowerCase().includes(texto));
+    return passaFiltro && passaBusca;
+  });
+
+  const corStatus = {
+    pendente: "bg-warning-subtle text-warning-emphasis",
+    confirmado: "bg-success-subtle text-success-emphasis",
+    concluido: "bg-primary-subtle text-primary-emphasis",
+    cancelado: "bg-danger-subtle text-danger-emphasis",
+  };
+
+  const camposAgenda = [
+    {
+      chave: "pet",
+      rotulo: "Pet / Dono",
+      render: (a) => (
+        <div>
+          <div className="fw-semibold">{buscarPet(a)?.nome}</div>
+          <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
+            {nomeDono(a)}
+          </div>
+        </div>
+      ),
+    },
+    { chave: "servicos", rotulo: "Serviço", render: (a) => nomesServicos(a) },
+    {
+      chave: "data",
+      rotulo: "Data & Hora",
+      render: (a) => (
+        <div>
+          <div className="fw-semibold">
+            {new Date(a.data + "T00:00:00").toLocaleDateString("pt-BR", {
+              day: "numeric",
+              month: "short",
+            })}
+          </div>
+          <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
+            {a.horario}
+          </div>
+        </div>
+      ),
+    },
+    {
+      chave: "valor",
+      rotulo: "Valor",
+      render: (a) =>
+        a.valor == null
+          ? "—"
+          : Number(a.valor).toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            }),
+    },
+    {
+      chave: "status",
+      rotulo: "Status",
+      render: (a) => (
+        <select
+          className="form-select form-select-sm"
+          style={{ width: "auto" }}
+          value={a.status}
+          onChange={(e) => mudarStatus(a.id, e.target.value)}
+          disabled={a.status === "CONCLUIDO" || a.status === "CANCELADO"}
+        >
+          <option value="AGENDADO">Agendado</option>
+          <option value="CONCLUIDO">Concluído</option>
+          <option value="CANCELADO">Cancelado</option>
+        </select>
+      ),
+    },
+  ];
 
   return (
     <div>
       <S.Hagendamentos>
         <div>
           <h1>Agendamentos</h1>
-          <p>Gerencie os agendamentos cadastrados</p>
         </div>
 
-        <Button
-          $cor={"blue"}
-          filho={"+ Agendamento"}
-          onClick={() => setOpenModal(true)}
-          atamanho={'50px'}
-          ltamanho={'150px'}
-          fsize={'18px'}
-        />
+        <div>
+          <Button
+            className="btn-primary"
+            texto="Novo Produto"
+            onClick={() => setOpenModal(true)}
+          />
+        </div>
       </S.Hagendamentos>
-
-      <Tabela
-        colunas={["Pet", "Tutor", "Data", "Horário", "Serviço", "Valor", "Observações", "Acões"]}
-        dados={agendamentos}
-        renderLinha={(agendamento, index) => (
-          <>
-            <S.Celula key={`Pet-${index}`}>{agendamento.pet}</S.Celula>
-            <S.Celula key={`Tutor-${index}`}>{agendamento.tutor}</S.Celula>
-            <S.Celula key={`Data-${index}`}>{agendamento.data}</S.Celula>
-            <S.Celula key={`Horario-${index}`}>{agendamento.horario}</S.Celula>
-            <S.Celula key={`Servico-${index}`}>{agendamento.servico}</S.Celula>
-            <S.Celula key={`Valor-${index}`}>{agendamento.valor ? `R$ ${agendamento.valor}` : "-"}</S.Celula>
-            <S.Celula key={`Observacoes-${index}`}>{agendamento.observacoes || "-"}</S.Celula>
-            <S.Celula key={`Acões-${index}`}>
-              <div>
-                <Button $cor={"transparent"} filho={<S.Edi />} />
-                <Button onClick={()=> deletarAgendamento(agendamento.id)} $cor={"transparent"} filho={<S.Del />} />
-              </div>
-            </S.Celula>
-          </>
-        )}
-      />
-
+      <S.FiltroT>
+        <BarraFiltro
+          busca={busca}
+          aoBuscar={setBusca}
+          placeholder="Buscar por pet, dono ou serviço..."
+          filtros={filtros}
+          filtroAtivo={filtroAtivo}
+          aoMudarFiltro={setFiltroAtivo}
+        />
+        <Tabela
+          aoExcluir={excluirAgendamento}
+          aoEditar={iniciarEdicao}
+          campos={camposAgenda}
+          dados={visiveis}
+        />
+      </S.FiltroT>
       <div>
-        <Modal isOpen={openModal}>
+        <Modal largura={420} isOpen={openModal}>
           <Form
             // props do formulario
             hForm={
-              <Button
+              <ButtonX
                 //props do botao de sair
-                $tcor={"#fff"}
-                filho={"X"}
-                $cor={"#ff0000"}
+                texto={<X fontSize={16} />}
                 onClick={() => setOpenModal(false)}
               />
             }
-            tForm={"Novo agendamento"}
+            tForm={editandoId ? "Alterar agendamento" : "Novo agendamento"}
           >
-            <Input
-              onChange={(e) => setPet(e.target.value)}
-              valor={pet}
-              texto={"Pet"}
-              type="text"
+            <Select
+              texto="Pet"
+              valor={petId}
+              onChange={(e) => setPetId(e.target.value)}
+              placeholder="Escolha o pet"
+              opcoes={pets.map((p) => {
+                const dono = clientes.find((c) => c.id === p.donoId)?.nome;
+                return { valor: p.id, rotulo: `${p.nome} (${dono})` };
+              })}
             />
-            <Input
-              onChange={(e) => setTutor(e.target.value)}
-              valor={tutor}
-              texto={"Tutor"}
-              type="text"
-            />
+
+            <label className="form-label">Serviços</label>
+            <div className="mb-3">
+              {servicos.map((s) => (
+                <Checkbox
+                  key={s.id}
+                  id={`serv-${s.id}`}
+                  texto={`${s.nome} · ${Number(s.valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`}
+                  marcado={servicosIds.includes(s.id)}
+                  onChange={() => alternarServico(s.id)}
+                />
+              ))}
+            </div>
+
             <Input
               onChange={(e) => setData(e.target.value)}
               valor={data}
-              texto={"Data"}
+              texto="Data"
               type="date"
             />
             <Input
               onChange={(e) => setHorario(e.target.value)}
               valor={horario}
-              texto={"Horário"}
+              texto="Horário"
               type="time"
             />
             <Input
-              onChange={(e) => setServico(e.target.value)}
-              valor={servico}
-              texto={"Serviço"}
+              texto="Observação"
+              valor={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
               type="text"
             />
-            <Input
-              onChange={(e) => setValor(e.target.value)}
-              valor={valor}
-              texto={"Valor (R$)"}
-              type="number"
-            />
 
-            <div>
-              <label>Observações (opcional)</label>
-              <textarea
-                onChange={(e) => setObservacoes(e.target.value)}
-                value={observacoes}
-                placeholder="Alergias, preferências..."
-                rows={3}
-                style={{ width: "100%", resize: "vertical", fontFamily: "inherit" }}
-              />
+            <div className="fw-bold mb-2">
+              Total:{" "}
+              {valorTotal.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </div>
 
-            <div>
+            <div className="d-flex gap-2 mt-3">
               <Button
-                onClick={addAgendamento}
-                filho={"Adicionar"}
-                cor={"#0044c2"}
-                type={"button"}
+                className="btn-outline-secondary flex-fill"
+                onClick={() => {
+                  setOpenModal(false);
+                  setEditandoId(null);
+                  setPetId("");
+                  setServicosIds([]);
+                  setData("");
+                  setHorario("");
+                  setObservacao("");
+                }}
+                texto="Cancelar"
+              />
+
+              <Button
+                className="btn-primary flex-fill"
+                onClick={editandoId ? editarAgendamento : addAgendamento}
+                texto={editandoId ? "Salvar alterações" : "Cadastrar"}
               />
             </div>
           </Form>

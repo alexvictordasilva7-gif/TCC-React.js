@@ -1,8 +1,11 @@
 import Modal from "../../components/Modal/Modal";
+import { useDados } from "../../context/DadosContext";
+import { especies } from "../../utils/opcoes";
 import Input from "../../components/Input/Input";
 import Button from "../../components/Button/Button";
+import Select from "../../components/Select/Select";
 import Form from "../../components/Forms/Forms";
-import Tabela from "../../components/Tabela/Tabela";
+import Ttabela from "../../components//TabelaTeste/TabelaT";
 import * as S from "./Pets.Styled";
 import { useEffect, useState } from "react";
 import api from "../../service/api";
@@ -10,112 +13,139 @@ import api from "../../service/api";
 const Pets = () => {
   const [openModal, setOpenModal] = useState(false);
   const [nome, setNome] = useState("");
-  const [especie, setEspecie] = useState("");
+  // const [especie, setEspecie] = useState("");
   const [raca, setRaca] = useState("");
-  const [idade, setIdade] = useState("");
-  const [tutor, setTutor] = useState("");
-  const [pets, setPets] = useState([]);
+  const [donoId, setDonoId] = useState("");
+  const [petEditando, setPetEditando] = useState(null);
+  const { clientes, setClientes, pets, setPets } = useDados();
+  
+  const normalizar = (p) => ({
+  ...p,
+  donoId: p.tutorIds?.[0] ?? p.tutorId ?? p.tutor?.id ?? p.tutores?.[0]?.id,
+});
 
   useEffect(() => {
-    async function carregarPets() {
-      try {
-        const resposta = await api.get('/api/pets');
-        setPets(resposta.data.content);
-      } catch (erro) {
-        console.error("Erro ao carregar pets:", erro);
+  async function carregar() {
+    try {
+      const resposta = await api.get("/api/pets?size=200");
+      console.log(resposta.data); 
+      const lista = resposta.data.content ?? resposta.data;
+      setPets(lista.map(normalizar));
+
+      // se abriu o Pets antes do Clientes, o select de dono estaria vazio
+      if (clientes.length === 0) {
+        const t = await api.get("/api/tutores?size=200");
+        setClientes(t.data.content ?? t.data);
       }
+    } catch (erro) {
+      console.error("Erro ao carregar pets:", erro);
     }
-    carregarPets();
-  }, []);
+  }
+  carregar();
+}, []);
 
+  function limparCampos() {
+    setNome("");
+    // setEspecie("");
+    setRaca("");
+    setDonoId("");
+  }
 
-  async function deletarPet(id) {
-     console.log("id recebido:", id);
+  function abrirNovo() {
+    limparCampos();
+    setPetEditando(null);
+    setOpenModal(true);
+  }
+
+  function abrirEditar(pet) {
+    setNome(pet.nome);
+    // setEspecie(pet.especie);
+    setRaca(pet.raca);
+    setDonoId(pet.donoId);
+    setPetEditando(pet);
+    setOpenModal(true);
+  }
+
+  function fecharModal() {
+    limparCampos();
+    setPetEditando(null);
+    setOpenModal(false);
+  }
+
+  async function salvarPet() {
+  if (!nome || !donoId ) return;
+
+  const dadosBack = { nome , raca, tutorIds: [donoId] }; 
+
   try {
-    await api.delete(`/api/pets/${id}`);
-    setPets(pets.filter((pet) => pet.id !== id));
+    if (petEditando) {
+      const resposta = await api.put(`/api/pets/${petEditando.id}`, dadosBack);
+      setPets(
+        pets.map((p) =>
+          p.id === petEditando.id ? normalizar({ ...p, ...resposta.data }) : p
+        )
+      );
+    } else {
+      const resposta = await api.post("/api/pets", dadosBack);
+      setPets([...pets, normalizar(resposta.data)]);
+    }
+    fecharModal();
   } catch (erro) {
-    console.error("Erro ao deletar pet:", erro);
-    alert("Não foi possível deletar o pet. Tente novamente.");
+    console.log(erro.response?.data);
+    alert("Não foi possível salvar o pet.");
   }
 }
 
-
-  // função criada para adicionar pets, e essa função e ativada pelo botão adicionar
-  async function addPet() {
-    const novoPet = { nome, especie, raca, idade, tutor };
-
-    try {
-    const resposta = await api.post('/api/pets', novoPet);
-    setPets([...pets, resposta.data]);
-
-    setNome("");
-    setEspecie("");
-    setRaca("");
-    setIdade("");
-    setTutor("");
-    setOpenModal(false);
+ async function deletaPet(id) {
+  try {
+    await api.delete(`/api/pets/${id}`);
+    setPets(pets.filter((p) => p.id !== id));
   } catch (erro) {
-    console.error("Erro ao cadastrar pet:", erro);
-    alert("Não foi possível cadastrar o pet. Tente novamente.");
+    console.log(erro.response?.data);
+    alert("Não foi possível excluir o pet.");
   }
-    }
+}
 
-
+  const camposPets = [
+    { chave: "nome", rotulo: "Nome" },
+    // { chave: "especie", rotulo: "Espécie" },
+    { chave: "raca", rotulo: "Raça" },
+    
+    {
+      chave: "dono",
+      rotulo: "Dono",
+      render: (pet) =>
+  clientes.find((c) => String(c.id) === String(pet.donoId))?.nome,
+    },
+  ];
 
   return (
     <div>
       <S.Hpet>
         <div>
           <h1>Pets</h1>
-          <p>Gerencie os pets cadastrados</p>
         </div>
         <div>
-        <Button
-          $cor={"blue"}
-          filho={"+ Novo Fornecedor"}
-          onClick={() => setOpenModal(true)}
-          atamanho={"100%"}
-          ltamanho={"200px"}
-          fsize={'18px'}
-        />
+          <Button
+            texto="Novo Pet"
+            onClick={abrirNovo}
+            className="btn-primary"
+          />
         </div>
-        
       </S.Hpet>
 
-      <Tabela
-        colunas={["Nome", "Espécie", "Raça", "Idade", "Tutor", "Acões"]}
+      <Ttabela
+        campos={camposPets}
         dados={pets}
-        renderLinha={(pet, index) => (
-          <>
-            <S.Celula key={`Nome-${index}`}>{pet.nome}</S.Celula>
-            <S.Celula key={`Especie-${index}`}>{pet.especie}</S.Celula>
-            <S.Celula key={`Raca-${index}`}>{pet.raca}</S.Celula>
-            <S.Celula key={`Idade-${index}`}>{pet.idade}</S.Celula>
-            <S.Celula key={`Tutor-${index}`}>{pet.tutor}</S.Celula>
-            <S.Celula key={`Acões-${index}`}>
-              <div>
-                <Button $cor={"transparent"} filho={<S.Edi />} />
-                <Button onClick={()=> deletarPet(pet.id)} $cor={"transparent"} filho={<S.Del />} />
-              </div>
-            </S.Celula>
-          </>
-        )}
+        aoEditar={abrirEditar}
+        aoExcluir={deletaPet}
       />
 
       <div>
-        <Modal isOpen={openModal}>
+        <Modal largura={420} isOpen={openModal}>
           <Form
             // props do formulario
-            hForm={
-              <Button
-                //props do botao de sair
-                $tcor={"#fff"}
-                filho={"X"}
-                $cor={"#ff0000"}
-                onClick={() => setOpenModal(false)}
-              />
-            }
+            hForm={""}
             tForm={"Novo pet"}
           >
             <Input
@@ -124,37 +154,38 @@ const Pets = () => {
               texto={"Nome do Pet"}
               type="text"
             />
-            <Input
-              onChange={(e) => setEspecie(e.target.value)}
+            {/* <Select
+              texto="Espécie"
               valor={especie}
-              texto={"Espécie"}
-              type="text"
-            />
+              onChange={(e) => setEspecie(e.target.value)}
+              opcoes={especies}
+              placeholder="Escolha a espécie"
+            /> */}
             <Input
               onChange={(e) => setRaca(e.target.value)}
               valor={raca}
               texto={"Raça"}
               type="text"
             />
-            <Input
-              onChange={(e) => setIdade(e.target.value)}
-              valor={idade}
-              texto={"Idade"}
-              type="text"
-            />
-            <Input
-              onChange={(e) => setTutor(e.target.value)}
-              valor={tutor}
-              texto={"Tutor"}
-              type="text"
+            <Select
+              texto="Dono"
+              valor={donoId}
+              onChange={(e) => setDonoId(e.target.value)}
+              opcoes={clientes.map((c) => ({ valor: c.id, rotulo: c.nome }))}
+              placeholder="Escolha o dono"
             />
 
-            <div>
+            <div className="d-flex gap-2 mt-3">
               <Button
-                onClick={addPet}
-                filho={"Adicionar"}
-                cor={"#0044c2"}
-                type={"button"}
+                className="btn-outline-secondary flex-fill"
+                onClick={fecharModal}
+                texto="Cancelar"
+              />
+
+              <Button
+                className="btn-primary flex-fill"
+                onClick={salvarPet}
+                texto="Cadastra"
               />
             </div>
           </Form>

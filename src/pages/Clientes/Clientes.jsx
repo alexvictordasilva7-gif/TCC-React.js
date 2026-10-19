@@ -1,8 +1,10 @@
 import Modal from "../../components/Modal/Modal";
 import Input from "../../components/Input/Input";
 import Button from "../../components/Button/Button";
+import { useDados } from "../../context/DadosContext";
+import { X } from "lucide-react";
 import Form from "../../components/Forms/Forms";
-import Tabela from "../../components/Tabela/Tabela";
+import Ttabela from "../../components/TabelaTeste/TabelaT";
 import * as S from "./Clientes.Styled";
 import { useEffect, useState } from "react";
 import api from "../../service/api";
@@ -13,105 +15,138 @@ const Clientes = () => {
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [endereco, setEndereco] = useState("");
-  const [clientes, setClientes] = useState([]);
+  const [clienteEditado, setClienteEditado] = useState(null);
+  const { clientes, setClientes, pets, setPets } = useDados();
 
   useEffect(() => {
-    async function carregarClientes() {
-      try {
-        const resposta = await api.get('/api/tutores');
-        setClientes(resposta.data.content);
-      } catch (erro) {
-        console.error("Erro ao carregar clientes:", erro);
-      }
+  async function carregarClientes() {
+    try {
+      const resposta = await api.get("/api/tutores?size=200");
+      const lista = resposta.data.content ?? resposta.data;
+
+      // mantém o email e o endereço que já estavam no front
+      setClientes((atuais) =>
+        lista.map((t) => {
+          const local = atuais.find((c) => String(c.id) === String(t.id));
+          return { ...t, email: local?.email, endereco: local?.endereco };
+        })
+      );
+    } catch (erro) {
+      console.error("Erro ao carregar clientes:", erro);
     }
-    carregarClientes();
-  }, []);
+  }
+  carregarClientes();
+}, []);
 
-
+  //deleta cliente e se tiver um pet associado ao cliente deleta os 2
   async function deletarCliente(id) {
-     console.log("id recebido:", id);
   try {
     await api.delete(`/api/tutores/${id}`);
-    setClientes(clientes.filter((cliente) => cliente.id !== id));
+    setClientes(clientes.filter((c) => c.id !== id));
+    setPets(pets.filter((p) => String(p.donoId) !== String(id)));
   } catch (erro) {
-    console.error("Erro ao deletar cliente:", erro);
-    alert("Não foi possível deletar o cliente. Tente novamente.");
+    console.log(erro.response?.data);
+    alert("Não foi possível excluir. Verifique se ele tem pets cadastrados.");
   }
 }
 
-
   // função criada para adiciona clientes, e essa função e ativado pelo botão adicionar
-  async function addCliente() {
-    const novoCliente = { nome, email, telefone, endereco };
-
-    try {
-    const resposta = await api.post('/api/tutores', novoCliente);
-    setClientes([...clientes, resposta.data]);
-
+  function limparCampos() {
     setNome("");
     setEmail("");
-    setTelefone("");
     setEndereco("");
-    setOpenModal(false);
-  } catch (erro) {
-    console.error("Erro ao cadastrar cliente:", erro);
-    alert("Não foi possível cadastrar o cliente. Tente novamente.");
+    setTelefone("");
   }
-    }
 
-    
+  function abrirNovo() {
+    limparCampos();
+    setClienteEditado(null);
+    setOpenModal(true);
+  }
+
+  function abrirEditar(clientes) {
+    setNome(clientes.nome);
+    setEmail(clientes.email);
+    setEndereco(clientes.endereco);
+    setTelefone(clientes.telefone);
+    setClienteEditado(clientes);
+    setOpenModal(true);
+  }
+
+  function fecharModal() {
+    limparCampos();
+    setClienteEditado(null);
+    setOpenModal(false);
+  }
+
+  async function salvarClient() {
+  if (!nome) return;
+
+  const dadosBack = { nome, telefone }; // CONFIRMAR os nomes dos campos
+  const soFront = { email, endereco };  // não existem no back
+
+  try {
+    if (clienteEditado) {
+      // EDITAR
+      const resposta = await api.put(`/api/tutores/${clienteEditado.id}`, dadosBack);
+      setClientes(
+        clientes.map((c) =>
+          c.id === clienteEditado.id ? { ...c, ...resposta.data, ...soFront } : c
+        )
+      );
+    } else {
+      // CADASTRAR
+      const resposta = await api.post("/api/tutores", dadosBack);
+      setClientes([...clientes, { ...resposta.data, ...soFront }]);
+    }
+    fecharModal();
+  } catch (erro) {
+    console.log(erro.response?.data);
+    alert("Não foi possível salvar o cliente.");
+  }
+}
+
+  //campos fixos da tabela
+  const camposClientes = [
+    { chave: "nome", rotulo: "Nome" },
+    { chave: "email", rotulo: "Email" },
+    { chave: "endereco", rotulo: "Endereço" },
+    { chave: "telefone", rotulo: "Telefone" },
+    {
+      chave: "pets",
+      rotulo: "Pets",
+      render: (cliente) => pets.filter((p) => p.donoId === cliente.id).length,
+    },
+  ];
 
   return (
     <div>
       <S.Hcliente>
         <div>
           <h1>Clientes</h1>
-          <p>Gerencie os clientes cadastrados</p>
         </div>
 
-        <Button
-          $cor={"blue"}
-          filho={"+ Cliente"}
-          onClick={() => setOpenModal(true)}
-          atamanho={'50px'}
-          ltamanho={'100px'}
-          fsize={'18px'}
-        />
+        <div>
+          <Button
+            className="btn-primary"
+            texto="Novo Cliente"
+            onClick={abrirNovo}
+          />
+        </div>
       </S.Hcliente>
 
-      <Tabela
-        colunas={["Nome", "Email", "Telefone", "Endereço", "pets", "Acões"]}
+      <Ttabela
+        campos={camposClientes}
         dados={clientes}
-        renderLinha={(cliente, index) => (
-          <>
-            <S.Celula key={`Nome-${index}`}>{cliente.nome}</S.Celula>
-            <S.Celula key={`Email-${index}`}>{cliente.email}</S.Celula>
-            <S.Celula key={`Telefone-${index}`}>{cliente.telefone}</S.Celula>
-            <S.Celula key={`Endereco-${index}`}>{cliente.endereco}</S.Celula>
-            <S.Celula key={`Pets-${index}`}>-</S.Celula>
-            <S.Celula key={`Acões-${index}`}>
-              <div>
-                <Button $cor={"transparent"} filho={<S.Edi />} />
-                <Button onClick={()=> deletarCliente(cliente.id)} $cor={"transparent"} filho={<S.Del />} />
-              </div>
-            </S.Celula>
-          </>
-        )}
+        aoExcluir={deletarCliente}
+        aoEditar={abrirEditar}
       />
 
       <div>
-        <Modal isOpen={openModal}>
+        <Modal largura="420" isOpen={openModal}>
           <Form
             // props do formulario
-            hForm={
-              <Button
-                //props do botao de sair
-                $tcor={"#fff"}
-                filho={"X"}
-                $cor={"#ff0000"}
-                onClick={() => setOpenModal(false)}
-              />
-            }
+            hForm={""}
             tForm={"Novo cliente"}
           >
             <Input
@@ -139,12 +174,17 @@ const Clientes = () => {
               type="text"
             />
 
-            <div>
+            <div className="d-flex gap-2 mt-3">
               <Button
-                onClick={addCliente}
-                filho={"Adicionar"}
-                cor={"#0044c2"}
-                type={"button"}
+                className="btn-outline-secondary flex-fill"
+                onClick={() => setOpenModal(false)}
+                texto="Cancelar"
+              />
+
+              <Button
+                className="btn-primary flex-fill"
+                onClick={salvarClient}
+                texto="Cadastra"
               />
             </div>
           </Form>
