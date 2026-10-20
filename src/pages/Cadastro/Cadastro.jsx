@@ -47,7 +47,7 @@ function Cadastro() {
         <S.Hdiv>
           <S.Cdiv>
             <S.Pata />
-            <h1>Cadastro</h1>
+            <h2>Cadastro</h2>
           </S.Cdiv>
         </S.Hdiv>
 

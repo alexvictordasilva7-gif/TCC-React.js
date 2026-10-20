@@ -164,7 +164,7 @@ function Estoque() {
     <div>
       <S.Hestoque>
         <div>
-          <h1>Estoque</h1>
+          <h2>Estoque</h2>
           <p className="text-secondary">Gerencie os produtos do seu estoque</p>
         </div>
         <div>

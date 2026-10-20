@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as S from "./Login.Styled.jsx";
@@ -13,25 +14,29 @@ function Login() {
 
   async function entrar() {
     if (!email || !senha) {
-      console.log(resposta.data);
       setErro("Preencha o email e a senha.");
-      return true;
+      return;
     }
+
     setErro("");
 
     try {
-      const resposta = await api.post("/api/auth/login", { email, senha }); // CONFIRMAR campos
-      console.log(resposta.data); // veja o nome do campo do token
-      localStorage.setItem("token", resposta.data.token); // CONFIRMAR
-      navigate("/Dashboard");
+      const resposta = await api.post("/api/auth/login", {
+        email,
+        senha,
+      });
+
+      // Salva o token da conta autenticada
+      localStorage.setItem("token", resposta.data.token);
+
+      navigate("/Dashboard", { replace: true });
     } catch (e) {
-      console.log(e.response);
+      console.error("Erro no login:", e.response?.data || e.message);
+
       if (e.response?.status === 401 || e.response?.status === 403) {
         setErro("Email ou senha incorretos.");
-        console.log(resposta.data);
       } else {
         setErro("Não foi possível conectar ao servidor.");
-        console.log(resposta.data);
       }
     }
   }
@@ -43,6 +48,7 @@ function Login() {
           <S.ContImg>
             <S.Limg src="/Patinha.png" alt="Logo Pet Shop" />
           </S.ContImg>
+
           <S.Cdiv>
             <h1>Pet Shop</h1>
             <p>Sistema de Gerenciamento</p>
@@ -56,6 +62,7 @@ function Login() {
             valor={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+
           <Input
             texto="Senha"
             placeholder="••••••••"
@@ -72,7 +79,11 @@ function Login() {
           <S.LinkLogin to="#">Esqueceu a senha?</S.LinkLogin>
         </S.LoginFooter>
 
-        <Button className="btn-primary" texto="Entrar" onClick={entrar} />
+        <Button
+          className="btn-primary"
+          texto="Entrar"
+          onClick={entrar}
+        />
       </S.Clogin>
 
       <S.Ddiv>

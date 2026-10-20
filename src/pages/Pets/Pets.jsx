@@ -123,7 +123,7 @@ const Pets = () => {
     <div>
       <S.Hpet>
         <div>
-          <h1>Pets</h1>
+          <h2>Pets</h2>
         </div>
         <div>
           <Button

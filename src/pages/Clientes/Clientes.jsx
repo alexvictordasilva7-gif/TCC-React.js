@@ -18,37 +18,45 @@ const Clientes = () => {
   const [clienteEditado, setClienteEditado] = useState(null);
   const { clientes, setClientes, pets, setPets } = useDados();
 
-  useEffect(() => {
-  async function carregarClientes() {
-    try {
-      const resposta = await api.get("/api/tutores?size=200");
-      const lista = resposta.data.content ?? resposta.data;
+  async function salvarClient() {
+    if (!nome) return;
 
-      // mantém o email e o endereço que já estavam no front
-      setClientes((atuais) =>
-        lista.map((t) => {
-          const local = atuais.find((c) => String(c.id) === String(t.id));
-          return { ...t, email: local?.email, endereco: local?.endereco };
-        })
-      );
+    const dadosBack = { nome, email, telefone, endereco }; // CONFIRMAR os nomes
+
+    try {
+      if (clienteEditado) {
+        const resposta = await api.put(
+          `/api/tutores/${clienteEditado.id}`,
+          dadosBack,
+        );
+        setClientes(
+          clientes.map((c) => (c.id === clienteEditado.id ? resposta.data : c)),
+        );
+      } else {
+        const resposta = await api.post("/api/tutores", dadosBack);
+        setClientes([...clientes, resposta.data]);
+      }
+      fecharModal();
     } catch (erro) {
-      console.error("Erro ao carregar clientes:", erro);
+      console.log(erro.response?.data);
+      alert(
+        erro.response?.data?.mensagens?.join("\n") ??
+          "Não foi possível salvar o cliente.",
+      );
     }
   }
-  carregarClientes();
-}, []);
 
   //deleta cliente e se tiver um pet associado ao cliente deleta os 2
   async function deletarCliente(id) {
-  try {
-    await api.delete(`/api/tutores/${id}`);
-    setClientes(clientes.filter((c) => c.id !== id));
-    setPets(pets.filter((p) => String(p.donoId) !== String(id)));
-  } catch (erro) {
-    console.log(erro.response?.data);
-    alert("Não foi possível excluir. Verifique se ele tem pets cadastrados.");
+    try {
+      await api.delete(`/api/tutores/${id}`);
+      setClientes(clientes.filter((c) => c.id !== id));
+      setPets(pets.filter((p) => String(p.donoId) !== String(id)));
+    } catch (erro) {
+      console.log(erro.response?.data);
+      alert("Não foi possível excluir. Verifique se ele tem pets cadastrados.");
+    }
   }
-}
 
   // função criada para adiciona clientes, e essa função e ativado pelo botão adicionar
   function limparCampos() {
@@ -80,31 +88,32 @@ const Clientes = () => {
   }
 
   async function salvarClient() {
-  if (!nome) return;
+    if (!nome) return;
 
-  const dadosBack = { nome, telefone }; // CONFIRMAR os nomes dos campos
-  const soFront = { email, endereco };  // não existem no back
+    const dadosBack = { nome, email, telefone, endereco }; // CONFIRMAR os nomes
 
-  try {
-    if (clienteEditado) {
-      // EDITAR
-      const resposta = await api.put(`/api/tutores/${clienteEditado.id}`, dadosBack);
-      setClientes(
-        clientes.map((c) =>
-          c.id === clienteEditado.id ? { ...c, ...resposta.data, ...soFront } : c
-        )
+    try {
+      if (clienteEditado) {
+        const resposta = await api.put(
+          `/api/tutores/${clienteEditado.id}`,
+          dadosBack,
+        );
+        setClientes(
+          clientes.map((c) => (c.id === clienteEditado.id ? resposta.data : c)),
+        );
+      } else {
+        const resposta = await api.post("/api/tutores", dadosBack);
+        setClientes([...clientes, resposta.data]);
+      }
+      fecharModal();
+    } catch (erro) {
+      console.log(erro.response?.data);
+      alert(
+        erro.response?.data?.mensagens?.join("\n") ??
+          "Não foi possível salvar o cliente.",
       );
-    } else {
-      // CADASTRAR
-      const resposta = await api.post("/api/tutores", dadosBack);
-      setClientes([...clientes, { ...resposta.data, ...soFront }]);
     }
-    fecharModal();
-  } catch (erro) {
-    console.log(erro.response?.data);
-    alert("Não foi possível salvar o cliente.");
   }
-}
 
   //campos fixos da tabela
   const camposClientes = [
@@ -123,7 +132,7 @@ const Clientes = () => {
     <div>
       <S.Hcliente>
         <div>
-          <h1>Clientes</h1>
+          <h2>Clientes</h2>
         </div>
 
         <div>

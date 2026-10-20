@@ -13,7 +13,7 @@ import * as S from "./Fornecedor.Styled";
 
 const Fornecedor = () => {
   const { fornecedores, setFornecedores, produtos } = useDados();
-
+  
   const [openModal, setOpenModal] = useState(false);
   const [fornecedorEditando, setFornecedorEditando] = useState(null);
   const [razaoSocial, setRazaoSocial] = useState("");
@@ -178,7 +178,7 @@ const Fornecedor = () => {
     <div>
       <S.Hfornecedor>
         <div>
-          <h1>Fornecedores</h1>
+          <h2>Fornecedores</h2>
           <p className="text-secondary">
             {fornecedores.length} fornecedores cadastrados
           </p>

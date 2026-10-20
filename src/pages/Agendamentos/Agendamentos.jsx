@@ -393,7 +393,7 @@ const Agendamentos = () => {
     <div>
       <S.Hagendamentos>
         <div>
-          <h1>Agendamentos</h1>
+          <h2>Agendamentos</h2>
         </div>
 
         <div>

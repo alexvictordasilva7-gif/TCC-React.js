@@ -1,4 +1,3 @@
-
 import Modal from "../../components/Modal/Modal";
 import Input from "../../components/Input/Input";
 import Select from "../../components/Select/Select";
@@ -101,23 +100,18 @@ const Servicos = () => {
       if (servicoEditando) {
         const resposta = await api.put(
           `/api/servicos/${servicoEditando.id}`,
-          dadosBack
+          dadosBack,
         );
 
         setServicos(
           servicos.map((s) =>
-            s.id === servicoEditando.id
-              ? normalizar(resposta.data)
-              : s
-          )
+            s.id === servicoEditando.id ? normalizar(resposta.data) : s,
+          ),
         );
       } else {
         const resposta = await api.post("/api/servicos", dadosBack);
 
-        setServicos([
-          ...servicos,
-          normalizar(resposta.data),
-        ]);
+        setServicos([...servicos, normalizar(resposta.data)]);
       }
 
       fecharModal();
@@ -126,7 +120,7 @@ const Servicos = () => {
 
       alert(
         erro.response?.data?.mensagens?.join("\n") ??
-          "Não foi possível salvar o serviço."
+          "Não foi possível salvar o serviço.",
       );
     }
   };
@@ -144,10 +138,10 @@ const Servicos = () => {
   }
 
   return (
-    <div className="max-h-90vh">
+    <div >
       <S.Hservico>
         <div>
-          <h1>Serviços</h1>
+          <h2>Serviços</h2>
         </div>
 
         <div>
@@ -174,12 +168,7 @@ const Servicos = () => {
       <div>
         <Modal largura={420} isOpen={openModal}>
           <Form
-            hForm={
-              <ButtonX
-                texto={<X size={16} />}
-                onClick={fecharModal}
-              />
-            }
+            hForm={<ButtonX texto={<X size={16} />} onClick={fecharModal} />}
             tForm={servicoEditando ? "Editar serviço" : "Novo serviço"}
           >
             <Select
@@ -191,12 +180,12 @@ const Servicos = () => {
             />
 
             <Select
-  texto="Categoria"
-  valor={categoria}
-  onChange={(e) => setCategoria(e.target.value)}
-  opcoes={categorias}
-  placeholder="Escolha a categoria"
-/>
+              texto="Categoria"
+              valor={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              opcoes={categorias}
+              placeholder="Escolha a categoria"
+            />
 
             <Input
               onChange={(e) => setDescricao(e.target.value)}
