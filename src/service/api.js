@@ -1,9 +1,11 @@
 import axios from "axios";
+import { sair } from "./auth";
 
 const api = axios.create({
-  baseURL: "https://pet-shop-tcc-etec.onrender.com",
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
+//"https://pet-shop-tcc-etec.onrender.com"
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
@@ -15,5 +17,18 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+
+api.interceptors.response.use(
+  (resposta) => resposta,
+  (erro) => {
+    const ehAuth = (erro.config?.url ?? "").includes("/api/auth/");
+    if (erro.response?.status === 401 && !ehAuth) {
+      sair();
+      window.location.href = "/Login";
+    }
+    return Promise.reject(erro);
+  },
+);
 
 export default api;

@@ -27,7 +27,7 @@ const Fornecedor = () => {
   const [busca, setBusca] = useState("");
   const [filtroAtivo, setFiltroAtivo] = useState("Todos");
 
-  // ---------- modal ----------
+  
   function limparCampos() {
     setRazaoSocial("");
     setCnpj("");
