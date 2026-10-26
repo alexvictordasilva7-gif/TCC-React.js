@@ -17,7 +17,7 @@ const Agendamentos = () => {
   const [openModal, setOpenModal] = useState(false);
 
   const [editandoId, setEditandoId] = useState(null);
-  const [observacao, setObservacao] = useState("");
+  
   const [busca, setBusca] = useState("");
   const [filtroAtivo, setFiltroAtivo] = useState("todos");
   const { clientes, pets, servicos, agendamentos, setAgendamentos } =
@@ -41,7 +41,7 @@ const Agendamentos = () => {
   null,
       data: a.dataHora?.slice(0, 10),
       horario: a.dataHora?.slice(11, 16),
-      observacao: a.observacao ?? "",
+      
       status: String(a.status ?? "AGENDADO").toUpperCase(),
     };
   }
@@ -132,7 +132,7 @@ const Agendamentos = () => {
     setServicosIds([servicoEncontrado.id]);
     setData(dataFormatada);
     setHorario(horarioFormatado);
-    setObservacao(a.observacao ?? "");
+    
     setOpenModal(true);
   }
 
@@ -146,7 +146,7 @@ const Agendamentos = () => {
 
     const dados = {
       dataHora: `${dia}-${mes}-${ano} ${horario}:00`,
-      observacao: "",
+      
       petID: Number(petId),
       servicoID: Number(servicosIds[0]),
     };
@@ -207,7 +207,7 @@ const Agendamentos = () => {
 
     const dados = {
       dataHora: `${dia}-${mes}-${ano} ${horario}:00`,
-      observacao,
+      
       petID: Number(petId),
       servicoID: Number(servicosIds[0]),
     };
@@ -225,7 +225,7 @@ const Agendamentos = () => {
                 servicoId: Number(servicosIds[0]),
                 data,
                 horario,
-                observacao,
+                
                 pet: pets.find((p) => p.id === Number(petId))?.nome,
                 servico: servicos.find((s) => s.id === Number(servicosIds[0]))
                   ?.nome,
@@ -239,7 +239,7 @@ const Agendamentos = () => {
       setServicosIds([]);
       setData("");
       setHorario("");
-      setObservacao("");
+      
       setOpenModal(false);
 
       alert("Agendamento alterado com sucesso!");
@@ -469,12 +469,7 @@ const Agendamentos = () => {
               texto="Horário"
               type="time"
             />
-            <Input
-              texto="Observação"
-              valor={observacao}
-              onChange={(e) => setObservacao(e.target.value)}
-              type="text"
-            />
+            
 
             <div className="fw-bold mb-2">
               Total:{" "}
@@ -494,7 +489,7 @@ const Agendamentos = () => {
                   setServicosIds([]);
                   setData("");
                   setHorario("");
-                  setObservacao("");
+                  
                 }}
                 texto="Cancelar"
               />

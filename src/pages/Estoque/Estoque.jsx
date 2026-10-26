@@ -1,7 +1,8 @@
 import * as S from "./Estoque.Styled";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDados } from "../../context/DadosContext";
 import { categoriasProduto } from "../../utils/opcoes";
+import api from "../../service/api";
 import CardResumo from "../../components/Cards/CardResumo.jsx";
 import AlertaAviso from "../../components/AlertaAviso/AlertaAviso.jsx";
 import Button from "../../components/Button/Button.jsx";
@@ -14,15 +15,29 @@ import Tabela from "../../components/TabelaTeste/TabelaT.jsx";
 const moeda = (v) =>
   Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-function hojeISO() {
-  const d = new Date();
-  const mes = String(d.getMonth() + 1).padStart(2, "0");
-  const dia = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${mes}-${dia}`;
-}
+// traduz o que vem do back para os nomes que a tela usa
+const normalizar = (p) => ({
+  ...p,
+  quantidade: p.quantMax ?? 0, // trocar por p.saldo quando houver movimentações
+  qtdMinima: p.quantMinima,
+  atualizado: p.criadoEm,
+});
+
+const rotuloCategoria = (valor) =>
+  categoriasProduto.find((c) => c.valor === valor)?.rotulo ?? valor;
+
+// o fornecedor pode ter razaoSocial ou nome
+const nomeFornecedor = (f) => f?.razaoSocial ?? f?.nome;
+
+// aceita "2026-10-25" ou "2026-10-25T14:30:00"
+const formatarData = (iso) => {
+  if (!iso) return "—";
+  const [ano, mes, dia] = String(iso).slice(0, 10).split("-");
+  return `${dia}/${mes}/${ano}`;
+};
 
 function Estoque() {
-  const { produtos, setProdutos, fornecedores } = useDados();
+  const { produtos, setProdutos, fornecedores, setFornecedores } = useDados();
 
   const [openModal, setOpenModal] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState(null);
@@ -33,14 +48,50 @@ function Estoque() {
   const [preco, setPreco] = useState("");
   const [fornecedorId, setFornecedorId] = useState("");
 
+  // carrega produtos e fornecedores do back ao abrir a página
+  useEffect(() => {
+  async function carregar() {
+    try {
+      const [p, f] = await Promise.all([
+        api.get("/api/produtos?size=200"),
+        api.get("/api/fornecedores?size=200"),
+      ]);
+      const listaProdutos = p.data.content ?? p.data;
+      const listaFornecedores = f.data.content ?? f.data;
+
+      // O backend deve devolver fornecedorId no ProdutoResponse.
+      // O fallback local ajuda enquanto produtos antigos são atualizados.
+      setProdutos((atuais) =>
+        listaProdutos.map((prod) => {
+          const local = atuais.find((x) => String(x.id) === String(prod.id));
+          return normalizar({
+            ...prod,
+            fornecedorId: prod.fornecedorId ?? local?.fornecedorId ?? "",
+          });
+        })
+      );
+
+      // não apaga o que só existe no front (categoria e status)
+      setFornecedores((atuais) =>
+        atuais.length > 0 ? atuais : listaFornecedores
+      );
+    } catch (erro) {
+      console.error("Erro ao carregar o estoque:", erro);
+    }
+  }
+  carregar();
+}, []);
+
   // ---------- alertas ----------
-  const estoqueBaixo = (p) => Number(p.quantidade) <= Number(p.qtdMinima);
+  const estoqueBaixo = (p) =>
+    p.qtdMinima != null && Number(p.quantidade) <= Number(p.qtdMinima);
   const produtosBaixos = produtos.filter(estoqueBaixo);
   const valorTotal = produtos.reduce(
     (soma, p) => soma + Number(p.quantidade) * Number(p.preco),
     0,
   );
 
+  // ---------- modal ----------
   function limparCampos() {
     setNome("");
     setCategoria("");
@@ -58,11 +109,11 @@ function Estoque() {
 
   function abrirEditar(produto) {
     setNome(produto.nome);
-    setCategoria(produto.categoria);
+    setCategoria(produto.categoria ?? "");
     setQuantidade(produto.quantidade);
-    setQtdMinima(produto.qtdMinima);
+    setQtdMinima(produto.qtdMinima ?? "");
     setPreco(produto.preco);
-    setFornecedorId(produto.fornecedorId);
+    setFornecedorId(produto.fornecedorId ?? "");
     setProdutoEditando(produto);
     setOpenModal(true);
   }
@@ -73,40 +124,96 @@ function Estoque() {
     setOpenModal(false);
   }
 
-  function salvarProduto() {
+  // ---------- salvar e excluir ----------
+  async function salvarProduto() {
     if (
-      !nome ||
+      !nome.trim() ||
       !categoria ||
       !fornecedorId ||
       quantidade === "" ||
       preco === ""
-    )
+    ) {
+      alert("Preencha todos os campos obrigatórios.");
       return;
+    }
 
-    const dados = {
-      nome,
+    const minima = qtdMinima === "" ? null : Number(qtdMinima);
+
+    const dadosBack = {
+      nome: nome.trim(),
       categoria,
-      quantidade: Number(quantidade),
-      qtdMinima: Number(qtdMinima),
+      quantMax: Number(quantidade),
+      quantMinima: minima,
       preco: Number(preco),
-      fornecedorId,
-      atualizado: hojeISO(),
+      fornecedorId: Number(fornecedorId),
     };
 
-    if (produtoEditando) {
-      setProdutos(
-        produtos.map((p) =>
-          p.id === produtoEditando.id ? { ...p, ...dados } : p,
-        ),
+    try {
+      if (produtoEditando) {
+        // Pressupõe PUT /api/produtos/{id}; confirme a rota no controller.
+        const resposta = await api.put(
+          `/api/produtos/${produtoEditando.id}`,
+          dadosBack,
+        );
+
+        const produtoAtualizado = normalizar({
+          ...(resposta.data ?? {}),
+          ...dadosBack,
+          id: resposta.data?.id ?? produtoEditando.id,
+          fornecedorId:
+            resposta.data?.fornecedorId ?? dadosBack.fornecedorId,
+        });
+
+        setProdutos((atuais) =>
+          atuais.map((p) =>
+            String(p.id) === String(produtoEditando.id)
+              ? produtoAtualizado
+              : p,
+          ),
+        );
+      } else {
+        const resposta = await api.post("/api/produtos", dadosBack);
+        const produtoCriado = normalizar({
+          ...resposta.data,
+          fornecedorId:
+            resposta.data?.fornecedorId ?? dadosBack.fornecedorId,
+        });
+
+        setProdutos((atuais) => [...atuais, produtoCriado]);
+      }
+
+      fecharModal();
+    } catch (erro) {
+      console.error("Erro ao salvar produto:", erro.response?.data ?? erro);
+      const mensagens = erro.response?.data?.mensagens;
+      alert(
+        Array.isArray(mensagens)
+          ? mensagens.join("\n")
+          : erro.response?.data?.message ??
+              "Não foi possível salvar o produto. Verifique os dados e a rota da API.",
       );
-    } else {
-      setProdutos([...produtos, { id: crypto.randomUUID(), ...dados }]);
     }
-    fecharModal();
   }
 
-  function deletarProduto(id) {
-    setProdutos(produtos.filter((p) => p.id !== id));
+  async function deletarProduto(id) {
+    const confirmar = window.confirm(
+      "Tem certeza que deseja excluir este produto?",
+    );
+    if (!confirmar) return;
+
+    try {
+      // Pressupõe DELETE /api/produtos/{id}; confirme a rota no controller.
+      await api.delete(`/api/produtos/${id}`);
+      setProdutos((atuais) =>
+        atuais.filter((p) => String(p.id) !== String(id)),
+      );
+    } catch (erro) {
+      console.error("Erro ao excluir produto:", erro.response?.data ?? erro);
+      alert(
+        erro.response?.data?.message ??
+          "Não foi possível excluir o produto. Ele pode ter movimentações vinculadas ou a rota pode ser diferente.",
+      );
+    }
   }
 
   // ---------- colunas ----------
@@ -128,19 +235,22 @@ function Estoque() {
       rotulo: "Categoria",
       render: (p) => (
         <span className="badge bg-primary-subtle text-primary">
-          {p.categoria}
+          {rotuloCategoria(p.categoria)}
         </span>
       ),
     },
     {
       chave: "fornecedor",
       rotulo: "Fornecedor",
-      render: (p) => fornecedores.find((f) => f.id === p.fornecedorId)?.nome,
+      render: (p) =>
+        nomeFornecedor(
+          fornecedores.find((f) => String(f.id) === String(p.fornecedorId)),
+        ),
     },
     {
       chave: "quantidade",
       rotulo: "Quantidade",
-      render: (p) => `${p.quantidade} / ${p.qtdMinima} min.`,
+      render: (p) => `${p.quantidade} / ${p.qtdMinima ?? "—"} min.`,
     },
     { chave: "preco", rotulo: "Preço unit.", render: (p) => moeda(p.preco) },
     {
@@ -154,9 +264,8 @@ function Estoque() {
     },
     {
       chave: "atualizado",
-      rotulo: "Última atualização",
-      render: (p) =>
-        new Date(p.atualizado + "T00:00:00").toLocaleDateString("pt-BR"),
+      rotulo: "Última atualização", 
+      render: (p) => formatarData(p.atualizado),
     },
   ];
 
@@ -183,7 +292,8 @@ function Estoque() {
             titulo="Total de Produtos"
             valor={produtos.length}
             icone="box-seam"
-            cor="primary"
+            corIcone="#2563eb"
+            fundoIcone="#dbeafe"
           />
         </div>
         <div className="col-md-4">
@@ -207,7 +317,6 @@ function Estoque() {
           />
         </div>
       </div>
-
 
       {/* alerta: só aparece se houver produto com estoque baixo */}
       <AlertaAviso
@@ -241,26 +350,18 @@ function Estoque() {
             opcoes={categoriasProduto}
             placeholder="Escolha a categoria"
           />
-
-          
-            <div className="">
-              <Input
-                onChange={(e) => setQuantidade(e.target.value)}
-                valor={quantidade}
-                texto="Quantidade"
-                type="number"
-              />
-            </div>
-            <div className="">
-              <Input
-                onChange={(e) => setQtdMinima(e.target.value)}
-                valor={qtdMinima}
-                texto="Qtd. Mínima"
-                type="number"
-              />
-            </div>
-          
-
+          <Input
+            onChange={(e) => setQuantidade(e.target.value)}
+            valor={quantidade}
+            texto="Quantidade"
+            type="number"
+          />
+          <Input
+            onChange={(e) => setQtdMinima(e.target.value)}
+            valor={qtdMinima}
+            texto="Qtd. Mínima"
+            type="number"
+          />
           <Input
             onChange={(e) => setPreco(e.target.value)}
             valor={preco}
@@ -271,7 +372,10 @@ function Estoque() {
             texto="Fornecedor"
             valor={fornecedorId}
             onChange={(e) => setFornecedorId(e.target.value)}
-            opcoes={fornecedores.map((f) => ({ valor: f.id, rotulo: f.nome }))}
+            opcoes={fornecedores.map((f) => ({
+              valor: f.id,
+              rotulo: nomeFornecedor(f),
+            }))}
             placeholder="Escolha o fornecedor"
           />
 

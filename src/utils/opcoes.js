@@ -30,10 +30,11 @@ export const categorias = [
   { valor: "LOGISTICA", rotulo: "Logística" },
 ];
 
+
 export const categoriasProduto = [
-  "Alimentação",
-  "Higiene",
-  "Acessórios",
-  "Brinquedos",
-  "Medicamentos",
+  { valor: "ALIMENTACAO", rotulo: "Alimentação" },
+  { valor: "HIGIENE", rotulo: "Higiene" },
+  { valor: "ACESSORIOS", rotulo: "Acessórios" },
+  { valor: "BRINQUEDOS", rotulo: "Brinquedos" },
+  { valor: "MEDICAMENTOS", rotulo: "Medicamentos" },
 ];

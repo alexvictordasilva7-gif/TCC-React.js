@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDados } from "../../context/DadosContext";
 import { categoriasProduto } from "../../utils/opcoes";
+import api from "../../service/api";
 import Modal from "../../components/Modal/Modal";
 import Input from "../../components/Input/Input";
 import Select from "../../components/Select/Select";
@@ -11,9 +12,23 @@ import CardResumo from "../../components/Cards/CardResumo";
 import BarraFiltro from "../../components/Filtro/BarraFiltro";
 import * as S from "./Fornecedor.Styled";
 
+// 14 números -> 00.000.000/0000-00
+const formatarCnpj = (c) =>
+  String(c ?? "").replace(
+    /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
+    "$1.$2.$3/$4-$5",
+  );
+
+// por enquanto a categoria usa a lista do produto (só na tela)
+const rotuloCategoria = (valor) =>
+  categoriasProduto.find((c) => c.valor === valor)?.rotulo ?? valor;
+
+// o "contato" da tela é o nomeFantasia do back
+const doBack = (f) => ({ ...f, nomeContato: f.nomeFantasia });
+
 const Fornecedor = () => {
   const { fornecedores, setFornecedores, produtos } = useDados();
-  
+
   const [openModal, setOpenModal] = useState(false);
   const [fornecedorEditando, setFornecedorEditando] = useState(null);
   const [razaoSocial, setRazaoSocial] = useState("");
@@ -22,12 +37,36 @@ const Fornecedor = () => {
   const [nomeContato, setNomeContato] = useState("");
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
-  const [endereco, setEndereco] = useState("");
   const [status, setStatus] = useState("Ativo");
   const [busca, setBusca] = useState("");
   const [filtroAtivo, setFiltroAtivo] = useState("Todos");
 
-  
+  // carrega os fornecedores do back ao abrir a página
+  useEffect(() => {
+    async function carregarFornecedores() {
+      try {
+        const resposta = await api.get("/api/fornecedores?size=200");
+        const lista = resposta.data.content ?? resposta.data;
+
+        // mantém o que só existe no front (categoria e status)
+        setFornecedores((atuais) =>
+          lista.map((f) => {
+            const local = atuais.find((x) => String(x.id) === String(f.id));
+            return {
+              ...doBack(f),
+              categoria: f.categoria ?? local?.categoria,
+              status: local?.status ?? "Ativo",
+            };
+          }),
+        );
+      } catch (erro) {
+        console.error("Erro ao carregar fornecedores:", erro);
+      }
+    }
+    carregarFornecedores();
+  }, []);
+
+  // ---------- modal ----------
   function limparCampos() {
     setRazaoSocial("");
     setCnpj("");
@@ -35,7 +74,6 @@ const Fornecedor = () => {
     setNomeContato("");
     setTelefone("");
     setEmail("");
-    setEndereco("");
     setStatus("Ativo");
   }
 
@@ -46,14 +84,13 @@ const Fornecedor = () => {
   }
 
   function abrirEditar(f) {
-    setRazaoSocial(f.razaoSocial);
-    setCnpj(f.cnpj);
-    setCategoria(f.categoria);
-    setNomeContato(f.nomeContato);
-    setTelefone(f.telefone);
-    setEmail(f.email);
-    setEndereco(f.endereco);
-    setStatus(f.status);
+    setRazaoSocial(f.razaoSocial ?? "");
+    setCnpj(f.cnpj ?? "");
+    setCategoria(f.categoria ?? "");
+    setNomeContato(f.nomeContato ?? "");
+    setTelefone(f.telefone ?? "");
+    setEmail(f.email ?? "");
+    setStatus(f.status ?? "Ativo");
     setFornecedorEditando(f);
     setOpenModal(true);
   }
@@ -65,40 +102,73 @@ const Fornecedor = () => {
   }
 
   // ---------- salvar e excluir ----------
-  function salvarFornecedor() {
-    if (!razaoSocial || !cnpj || !categoria) return;
+  async function salvarFornecedor() {
+    const cnpjLimpo = cnpj.replace(/\D/g, "");
 
-    const dados = {
+    if (!razaoSocial || !categoria) return;
+    if (cnpjLimpo.length !== 14) {
+      alert("O CNPJ deve ter 14 números.");
+      return;
+    }
+
+    const dadosBack = {
       razaoSocial,
-      cnpj,
-      categoria,
-      nomeContato,
-      telefone,
-      email,
-      endereco,
-      status,
+      cnpj: cnpjLimpo,
+      nomeFantasia: nomeContato || null,
+      categoria, 
+      telefone: telefone || null,
+      email: email || null,
     };
 
-    if (fornecedorEditando) {
-      setFornecedores(
-        fornecedores.map((f) =>
-          f.id === fornecedorEditando.id ? { ...f, ...dados } : f,
-        ),
+    // o que só existe no front
+    const soFront = { categoria, status };
+
+    try {
+      if (fornecedorEditando) {
+        const resposta = await api.put(
+          `/api/fornecedores/${fornecedorEditando.id}`,
+          dadosBack,
+        );
+        setFornecedores(
+          fornecedores.map((f) =>
+            f.id === fornecedorEditando.id
+              ? { ...f, ...doBack(resposta.data), ...soFront }
+              : f,
+          ),
+        );
+      } else {
+        const resposta = await api.post("/api/fornecedores", dadosBack);
+        setFornecedores([
+          ...fornecedores,
+          { ...doBack(resposta.data), ...soFront },
+        ]);
+      }
+      fecharModal();
+    } catch (erro) {
+      console.log(erro.response?.data);
+      alert(
+        erro.response?.data?.mensagens?.join("\n") ??
+          "Não foi possível salvar o fornecedor.",
       );
-    } else {
-      setFornecedores([...fornecedores, { id: crypto.randomUUID(), ...dados }]);
     }
-    fecharModal();
   }
 
-  function deletarFornecedor(id) {
-    if (produtos.some((p) => p.fornecedorId === id)) {
+  async function deletarFornecedor(id) {
+    if (produtos.some((p) => String(p.fornecedorId) === String(id))) {
       alert(
         "Este fornecedor tem produtos no estoque. Exclua ou troque o fornecedor deles primeiro.",
       );
       return;
     }
-    setFornecedores(fornecedores.filter((f) => f.id !== id));
+    try {
+      await api.delete(`/api/fornecedores/${id}`);
+      setFornecedores(fornecedores.filter((f) => f.id !== id));
+    } catch (erro) {
+      console.log(erro.response?.data);
+      alert(
+        "Não foi possível excluir o fornecedor. Verifique se ele tem produtos cadastrados.",
+      );
+    }
   }
 
   // ---------- filtros ----------
@@ -113,9 +183,11 @@ const Fornecedor = () => {
   const visiveis = fornecedores.filter((f) => {
     const passaFiltro = filtroAtivo === "Todos" || f.status === filtroAtivo;
     const texto = busca.toLowerCase();
-    const passaBusca = [f.razaoSocial, f.nomeContato, f.categoria].some(
-      (campo) => (campo ?? "").toLowerCase().includes(texto),
-    );
+    const passaBusca = [
+      f.razaoSocial,
+      f.nomeContato,
+      rotuloCategoria(f.categoria),
+    ].some((campo) => (campo ?? "").toLowerCase().includes(texto));
     return passaFiltro && passaBusca;
   });
 
@@ -136,11 +208,12 @@ const Fornecedor = () => {
     {
       chave: "categoria",
       rotulo: "Categoria",
-      render: (f) => (
-        <span className="badge bg-primary-subtle text-primary">
-          {f.categoria}
-        </span>
-      ),
+      render: (f) =>
+        f.categoria && (
+          <span className="badge bg-primary-subtle text-primary">
+            {rotuloCategoria(f.categoria)}
+          </span>
+        ),
     },
     {
       chave: "contato",
@@ -154,7 +227,7 @@ const Fornecedor = () => {
         </div>
       ),
     },
-    { chave: "cnpj", rotulo: "CNPJ" },
+    { chave: "cnpj", rotulo: "CNPJ", render: (f) => formatarCnpj(f.cnpj) },
     {
       chave: "status",
       rotulo: "Status",
@@ -295,13 +368,6 @@ const Fornecedor = () => {
               />
             </div>
           </div>
-
-          <Input
-            onChange={(e) => setEndereco(e.target.value)}
-            valor={endereco}
-            texto="Endereço"
-            type="text"
-          />
 
           <label className="form-label mt-3">Status</label>
           <div className="mb-3">
