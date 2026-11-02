@@ -7,10 +7,28 @@ import ButtonX from "../../components/Button/Button";
 import { categorias, servicosPet } from "../../utils/opcoes";
 import CardServico from "../../components/Cards/CardServico";
 import { X } from "lucide-react";
+import { alerta } from "../../utils/Alertas";
 import Form from "../../components/Forms/Forms";
 import * as S from "./Servicos.Styled";
 import { useEffect, useState } from "react";
 import api from "../../service/api";
+
+// Aviso de erro exibido embaixo dos campos (usado nos Selects, que ainda não têm a prop "erro")
+const MsgErro = ({ children }) =>
+  children ? (
+    <small
+      role="alert"
+      style={{
+        display: "block",
+        marginTop: 4,
+        color: "#e5534b",
+        fontSize: "0.8rem",
+        fontWeight: 500,
+      }}
+    >
+      {children}
+    </small>
+  ) : null;
 
 const Servicos = () => {
   const [openModal, setOpenModal] = useState(false);
@@ -20,6 +38,7 @@ const Servicos = () => {
   const [descricao, setDescricao] = useState("");
   const [duracao, setDuracao] = useState("");
   const [valor, setValor] = useState("");
+  const [erros, setErros] = useState({});
 
   const { servicos, setServicos } = useDados();
 
@@ -41,7 +60,7 @@ const Servicos = () => {
 
         setServicos(lista.map(normalizar));
       } catch (erro) {
-        console.error("Erro ao carregar serviços:", erro);
+        alerta.erro("Erro ao carregar serviços.");
       }
     }
 
@@ -54,6 +73,7 @@ const Servicos = () => {
     setDescricao("");
     setDuracao("");
     setValor("");
+    setErros({});
   }
 
   function abrirNovo() {
@@ -63,6 +83,7 @@ const Servicos = () => {
   }
 
   function abrirEditar(servico) {
+    setErros({});
     setTipo(servico.tipoServico ?? servico.tipo ?? "");
     setCategoria(servico.categoria ?? "");
     setDescricao(servico.descricao ?? "");
@@ -78,12 +99,33 @@ const Servicos = () => {
     setOpenModal(false);
   }
 
+  // valida os campos obrigatórios e guarda a mensagem de cada um em "erros"
+  function validar() {
+    const novosErros = {};
+
+    if (!tipo) novosErros.tipo = "Escolha o tipo de serviço.";
+    if (!categoria) novosErros.categoria = "Escolha a categoria.";
+
+    if (duracao === "" || Number(duracao) <= 0) {
+      novosErros.duracao = "Informe a duração em minutos.";
+    }
+
+    if (valor === "" || Number(valor) < 0) {
+      novosErros.valor = "Informe um valor válido.";
+    }
+
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
+  }
+
+  // remove o erro de um campo assim que a pessoa volta a preenchê-lo
+  function limparErro(campo) {
+    setErros((prev) => ({ ...prev, [campo]: "" }));
+  }
+
   // Cadastra ou edita um serviço
   const salvarServico = async () => {
-    if (!tipo || valor === "" || duracao === "" || !categoria) {
-      alert("Preencha o tipo, a categoria, a duração e o valor.");
-      return;
-    }
+    if (!validar()) return;
 
     const dadosBack = {
       nome: servicosPet.find((s) => s.valor === tipo)?.rotulo ?? tipo,
@@ -108,17 +150,19 @@ const Servicos = () => {
             s.id === servicoEditando.id ? normalizar(resposta.data) : s,
           ),
         );
+        alerta.sucesso("Serviço atualizado com sucesso!");
       } else {
         const resposta = await api.post("/api/servicos", dadosBack);
 
         setServicos([...servicos, normalizar(resposta.data)]);
+        alerta.sucesso("Serviço cadastrado com sucesso!");
       }
 
       fecharModal();
     } catch (erro) {
       console.error("Erro ao salvar serviço:", erro.response?.data ?? erro);
 
-      alert(
+      alerta.erro(
         erro.response?.data?.mensagens?.join("\n") ??
           "Não foi possível salvar o serviço.",
       );
@@ -131,14 +175,15 @@ const Servicos = () => {
       await api.delete(`/api/servicos/${id}`);
 
       setServicos(servicos.filter((s) => s.id !== id));
+      alerta.sucesso("Serviço excluído.");
     } catch (erro) {
       console.error("Erro ao excluir serviço:", erro.response?.data ?? erro);
-      alert("Não foi possível excluir o serviço.");
+      alerta.erro("Não foi possível excluir o serviço.");
     }
   }
 
   return (
-    <div >
+    <div>
       <S.Hservico>
         <div>
           <h2>Serviços</h2>
@@ -171,41 +216,65 @@ const Servicos = () => {
             hForm={<ButtonX texto={<X size={16} />} onClick={fecharModal} />}
             tForm={servicoEditando ? "Editar serviço" : "Novo serviço"}
           >
-            <Select
-              texto="Tipo de serviço"
-              valor={tipo}
-              onChange={(e) => setTipo(e.target.value)}
-              opcoes={servicosPet}
-              placeholder="Escolha o serviço"
-            />
+            <div>
+              <Select
+                texto="Tipo de serviço *"
+                valor={tipo}
+                onChange={(e) => {
+                  setTipo(e.target.value);
+                  limparErro("tipo");
+                }}
+                opcoes={servicosPet}
+                placeholder="Ex.: Banho e tosa"
+              />
+              <MsgErro>{erros.tipo}</MsgErro>
+            </div>
 
-            <Select
-              texto="Categoria"
-              valor={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              opcoes={categorias}
-              placeholder="Escolha a categoria"
-            />
+            <div>
+              <Select
+                texto="Categoria *"
+                valor={categoria}
+                onChange={(e) => {
+                  setCategoria(e.target.value);
+                  limparErro("categoria");
+                }}
+                opcoes={categorias}
+                placeholder="Ex.: Estética"
+              />
+              <MsgErro>{erros.categoria}</MsgErro>
+            </div>
 
             <Input
               onChange={(e) => setDescricao(e.target.value)}
               valor={descricao}
               texto="Descrição"
               type="text"
+              placeholder="Ex.: Banho com shampoo hipoalergênico"
+              obrigatorio={false}
             />
 
             <Input
-              onChange={(e) => setDuracao(e.target.value)}
+              onChange={(e) => {
+                setDuracao(e.target.value);
+                limparErro("duracao");
+              }}
               valor={duracao}
-              texto="Duração (min)"
+              texto="Duração (min) *"
               type="number"
+              placeholder="Ex.: 60"
+              erro={erros.duracao}
             />
 
             <Input
-              onChange={(e) => setValor(e.target.value)}
+              onChange={(e) => {
+                setValor(e.target.value);
+                limparErro("valor");
+              }}
               valor={valor}
-              texto="Valor (R$)"
+              texto="Valor (R$) *"
               type="number"
+              placeholder="Ex.: 80.00"
+              erro={erros.valor}
             />
 
             <div className="d-flex gap-2 mt-3">

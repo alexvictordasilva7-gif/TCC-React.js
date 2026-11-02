@@ -7,7 +7,9 @@ function Layout() {
         <div>
             {/* criei esse container para organizar o layout, esse container esta com display: flex para o conteudo ficar alinhado */}
             <S.LayoutContainer> 
-                <SideBar />
+                
+                    <SideBar />
+                
                 <S.Main>
                     <Outlet />
                 </S.Main>

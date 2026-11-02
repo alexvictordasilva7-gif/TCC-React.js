@@ -2,6 +2,7 @@ import * as S from "./Estoque.Styled";
 import { useEffect, useState } from "react";
 import { useDados } from "../../context/DadosContext";
 import { categoriasProduto } from "../../utils/opcoes";
+import { alerta } from "../../utils/Alertas";
 import api from "../../service/api";
 import CardResumo from "../../components/Cards/CardResumo.jsx";
 import AlertaAviso from "../../components/AlertaAviso/AlertaAviso.jsx";
@@ -36,6 +37,23 @@ const formatarData = (iso) => {
   return `${dia}/${mes}/${ano}`;
 };
 
+// Aviso de erro exibido embaixo dos campos (usado nos Selects, que ainda não têm a prop "erro")
+const MsgErro = ({ children }) =>
+  children ? (
+    <small
+      role="alert"
+      style={{
+        display: "block",
+        marginTop: 4,
+        color: "#e5534b",
+        fontSize: "0.8rem",
+        fontWeight: 500,
+      }}
+    >
+      {children}
+    </small>
+  ) : null;
+
 function Estoque() {
   const { produtos, setProdutos, fornecedores, setFornecedores } = useDados();
 
@@ -47,40 +65,42 @@ function Estoque() {
   const [qtdMinima, setQtdMinima] = useState("");
   const [preco, setPreco] = useState("");
   const [fornecedorId, setFornecedorId] = useState("");
+  const [erros, setErros] = useState({});
 
   // carrega produtos e fornecedores do back ao abrir a página
   useEffect(() => {
-  async function carregar() {
-    try {
-      const [p, f] = await Promise.all([
-        api.get("/api/produtos?size=200"),
-        api.get("/api/fornecedores?size=200"),
-      ]);
-      const listaProdutos = p.data.content ?? p.data;
-      const listaFornecedores = f.data.content ?? f.data;
+    async function carregar() {
+      try {
+        const [p, f] = await Promise.all([
+          api.get("/api/produtos?size=200"),
+          api.get("/api/fornecedores?size=200"),
+        ]);
+        const listaProdutos = p.data.content ?? p.data;
+        const listaFornecedores = f.data.content ?? f.data;
 
-      // O backend deve devolver fornecedorId no ProdutoResponse.
-      // O fallback local ajuda enquanto produtos antigos são atualizados.
-      setProdutos((atuais) =>
-        listaProdutos.map((prod) => {
-          const local = atuais.find((x) => String(x.id) === String(prod.id));
-          return normalizar({
-            ...prod,
-            fornecedorId: prod.fornecedorId ?? local?.fornecedorId ?? "",
-          });
-        })
-      );
+        // O backend deve devolver fornecedorId no ProdutoResponse.
+        // O fallback local ajuda enquanto produtos antigos são atualizados.
+        setProdutos((atuais) =>
+          listaProdutos.map((prod) => {
+            const local = atuais.find((x) => String(x.id) === String(prod.id));
+            return normalizar({
+              ...prod,
+              fornecedorId: prod.fornecedorId ?? local?.fornecedorId ?? "",
+            });
+          }),
+        );
 
-      // não apaga o que só existe no front (categoria e status)
-      setFornecedores((atuais) =>
-        atuais.length > 0 ? atuais : listaFornecedores
-      );
-    } catch (erro) {
-      console.error("Erro ao carregar o estoque:", erro);
+        // não apaga o que só existe no front (categoria e status)
+        setFornecedores((atuais) =>
+          atuais.length > 0 ? atuais : listaFornecedores,
+        );
+      } catch (erro) {
+        console.error("Erro ao carregar o estoque:", erro);
+        alerta.erro("Não foi possível carregar o estoque.");
+      }
     }
-  }
-  carregar();
-}, []);
+    carregar();
+  }, []);
 
   // ---------- alertas ----------
   const estoqueBaixo = (p) =>
@@ -99,6 +119,7 @@ function Estoque() {
     setQtdMinima("");
     setPreco("");
     setFornecedorId("");
+    setErros({});
   }
 
   function abrirNovo() {
@@ -108,6 +129,7 @@ function Estoque() {
   }
 
   function abrirEditar(produto) {
+    setErros({});
     setNome(produto.nome);
     setCategoria(produto.categoria ?? "");
     setQuantidade(produto.quantidade);
@@ -124,18 +146,35 @@ function Estoque() {
     setOpenModal(false);
   }
 
+  // valida os campos obrigatórios e guarda a mensagem de cada um em "erros"
+  function validar() {
+    const novosErros = {};
+
+    if (!nome.trim()) novosErros.nome = "Informe o nome do produto.";
+    if (!categoria) novosErros.categoria = "Escolha a categoria.";
+
+    if (quantidade === "" || Number(quantidade) < 0) {
+      novosErros.quantidade = "Informe a quantidade em estoque.";
+    }
+
+    if (preco === "" || Number(preco) < 0) {
+      novosErros.preco = "Informe o preço unitário.";
+    }
+
+    if (!fornecedorId) novosErros.fornecedorId = "Escolha o fornecedor.";
+
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
+  }
+
+  // remove o erro de um campo assim que a pessoa volta a preenchê-lo
+  function limparErro(campo) {
+    setErros((prev) => ({ ...prev, [campo]: "" }));
+  }
+
   // ---------- salvar e excluir ----------
   async function salvarProduto() {
-    if (
-      !nome.trim() ||
-      !categoria ||
-      !fornecedorId ||
-      quantidade === "" ||
-      preco === ""
-    ) {
-      alert("Preencha todos os campos obrigatórios.");
-      return;
-    }
+    if (!validar()) return;
 
     const minima = qtdMinima === "" ? null : Number(qtdMinima);
 
@@ -160,8 +199,7 @@ function Estoque() {
           ...(resposta.data ?? {}),
           ...dadosBack,
           id: resposta.data?.id ?? produtoEditando.id,
-          fornecedorId:
-            resposta.data?.fornecedorId ?? dadosBack.fornecedorId,
+          fornecedorId: resposta.data?.fornecedorId ?? dadosBack.fornecedorId,
         });
 
         setProdutos((atuais) =>
@@ -171,26 +209,27 @@ function Estoque() {
               : p,
           ),
         );
+        alerta.sucesso("Produto atualizado com sucesso!");
       } else {
         const resposta = await api.post("/api/produtos", dadosBack);
         const produtoCriado = normalizar({
           ...resposta.data,
-          fornecedorId:
-            resposta.data?.fornecedorId ?? dadosBack.fornecedorId,
+          fornecedorId: resposta.data?.fornecedorId ?? dadosBack.fornecedorId,
         });
 
         setProdutos((atuais) => [...atuais, produtoCriado]);
+        alerta.sucesso("Produto cadastrado com sucesso!");
       }
 
       fecharModal();
     } catch (erro) {
       console.error("Erro ao salvar produto:", erro.response?.data ?? erro);
       const mensagens = erro.response?.data?.mensagens;
-      alert(
+      alerta.erro(
         Array.isArray(mensagens)
           ? mensagens.join("\n")
-          : erro.response?.data?.message ??
-              "Não foi possível salvar o produto. Verifique os dados e a rota da API.",
+          : (erro.response?.data?.message ??
+              "Não foi possível salvar o produto. Verifique os dados e a rota da API."),
       );
     }
   }
@@ -207,9 +246,10 @@ function Estoque() {
       setProdutos((atuais) =>
         atuais.filter((p) => String(p.id) !== String(id)),
       );
+      alerta.sucesso("Produto excluído.");
     } catch (erro) {
       console.error("Erro ao excluir produto:", erro.response?.data ?? erro);
-      alert(
+      alerta.erro(
         erro.response?.data?.message ??
           "Não foi possível excluir o produto. Ele pode ter movimentações vinculadas ou a rota pode ser diferente.",
       );
@@ -264,7 +304,7 @@ function Estoque() {
     },
     {
       chave: "atualizado",
-      rotulo: "Última atualização", 
+      rotulo: "Última atualização",
       render: (p) => formatarData(p.atualizado),
     },
   ];
@@ -274,7 +314,6 @@ function Estoque() {
       <S.Hestoque>
         <div>
           <h2>Estoque</h2>
-          <p className="text-secondary">Gerencie os produtos do seu estoque</p>
         </div>
         <div>
           <Button
@@ -338,46 +377,80 @@ function Estoque() {
           tForm={produtoEditando ? "Editar produto" : "Novo produto"}
         >
           <Input
-            onChange={(e) => setNome(e.target.value)}
+            onChange={(e) => {
+              setNome(e.target.value);
+              limparErro("nome");
+            }}
             valor={nome}
-            texto="Nome do Produto"
+            texto="Nome do Produto *"
             type="text"
+            placeholder="Ex.: Ração Premium Cães Adultos 15kg"
+            erro={erros.nome}
           />
-          <Select
-            texto="Categoria"
-            valor={categoria}
-            onChange={(e) => setCategoria(e.target.value)}
-            opcoes={categoriasProduto}
-            placeholder="Escolha a categoria"
-          />
+
+          <div>
+            <Select
+              texto="Categoria *"
+              valor={categoria}
+              onChange={(e) => {
+                setCategoria(e.target.value);
+                limparErro("categoria");
+              }}
+              opcoes={categoriasProduto}
+              placeholder="Ex.: Alimentação"
+            />
+            <MsgErro>{erros.categoria}</MsgErro>
+          </div>
+
           <Input
-            onChange={(e) => setQuantidade(e.target.value)}
+            onChange={(e) => {
+              setQuantidade(e.target.value);
+              limparErro("quantidade");
+            }}
             valor={quantidade}
-            texto="Quantidade"
+            texto="Quantidade *"
             type="number"
+            placeholder="Ex.: 50"
+            erro={erros.quantidade}
           />
+
           <Input
             onChange={(e) => setQtdMinima(e.target.value)}
             valor={qtdMinima}
             texto="Qtd. Mínima"
             type="number"
+            placeholder="Ex.: 10"
+            obrigatorio={false}
           />
+
           <Input
-            onChange={(e) => setPreco(e.target.value)}
+            onChange={(e) => {
+              setPreco(e.target.value);
+              limparErro("preco");
+            }}
             valor={preco}
-            texto="Preço Unitário (R$)"
+            texto="Preço Unitário (R$) *"
             type="number"
+            placeholder="Ex.: 129.90"
+            erro={erros.preco}
           />
-          <Select
-            texto="Fornecedor"
-            valor={fornecedorId}
-            onChange={(e) => setFornecedorId(e.target.value)}
-            opcoes={fornecedores.map((f) => ({
-              valor: f.id,
-              rotulo: nomeFornecedor(f),
-            }))}
-            placeholder="Escolha o fornecedor"
-          />
+
+          <div>
+            <Select
+              texto="Fornecedor *"
+              valor={fornecedorId}
+              onChange={(e) => {
+                setFornecedorId(e.target.value);
+                limparErro("fornecedorId");
+              }}
+              opcoes={fornecedores.map((f) => ({
+                valor: f.id,
+                rotulo: nomeFornecedor(f),
+              }))}
+              placeholder="Ex.: Pet Foods Distribuidora"
+            />
+            <MsgErro>{erros.fornecedorId}</MsgErro>
+          </div>
 
           <div className="d-flex gap-2 mt-3">
             <Button

@@ -32,11 +32,12 @@ function Login() {
       navigate("/Dashboard", { replace: true });
     } catch (e) {
       console.error("Erro no login:", e.response?.data || e.message);
-
       if (e.response?.status === 401 || e.response?.status === 403) {
         setErro("Email ou senha incorretos.");
+        toast.error("Email ou senha incorretos.");
       } else {
         setErro("Não foi possível conectar ao servidor.");
+        toast.error("Não foi possível conectar ao servidor.");
       }
     }
   }

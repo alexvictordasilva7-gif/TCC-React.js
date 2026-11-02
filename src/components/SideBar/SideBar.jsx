@@ -17,7 +17,7 @@ import {
 
 function SideBar() {
   const navigate = useNavigate();
-  const [recolhida, setRecolhida] = useState(false);
+  const [recolhida, setRecolhida] = useState(true);
 
   function sair() {
     localStorage.removeItem("token");
