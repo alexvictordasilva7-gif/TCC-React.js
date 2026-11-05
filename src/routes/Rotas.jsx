@@ -5,7 +5,7 @@ import Dashboard from "../pages/Dashboard/Dashboard.jsx";
 import Servicos from "../pages/Servicos/Servicos.jsx";
 import Clientes from "../pages/Clientes/Clientes.jsx";
 import Pets from "../pages/Pets/Pets.jsx";
-import Login from "../pages/login/login.jsx";
+import Login from "../pages/Login/login.jsx";
 import Cadastro from "../pages/Cadastro/Cadastro.jsx";
 import Estoque from "../pages/Estoque/Estoque.jsx";
 import Fornecedor from "../pages/Fornecedor/Fornecedor.jsx";
