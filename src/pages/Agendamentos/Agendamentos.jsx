@@ -399,7 +399,7 @@ const Agendamentos = () => {
         <div>
           <Button
             className="btn-primary"
-            texto="Novo Produto"
+            texto="Novo Agendamento"
             onClick={() => setOpenModal(true)}
           />
         </div>

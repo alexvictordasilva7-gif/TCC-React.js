@@ -6,8 +6,13 @@ export const SideBarContainer = styled.aside`
   width: ${({ $recolhida }) => ($recolhida ? "75px" : "175px")};
   flex: 0 0 ${({ $recolhida }) => ($recolhida ? "75px" : "175px")};
   transition: width 0.3s ease, flex-basis 0.3s ease;
+
+  /* ↓ o que muda */
+  position: sticky;
+  top: 0;
   height: 100vh;
-  position: relative;
+  align-self: flex-start; /* impede o flex de esticar a sidebar junto com o conteúdo */
+
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
