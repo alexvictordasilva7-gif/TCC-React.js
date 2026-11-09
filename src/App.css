@@ -1,8 +1,17 @@
-@import url('https://googleapis.com');
-
+/* Fonte do sistema (a mesma da tela Clientes & Pets).
+   As fontes Inter e Archivo são carregadas no index.html. */
 * {
   /* Isso força TODOS os elementos (h1, p, button) a usarem a fonte */
-  font-family: 'Roboto', sans-serif !important; 
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+/* títulos das páginas e dos formulários */
+h1,
+h2,
+h3 {
+  font-family: 'Archivo', system-ui, sans-serif !important;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 body {

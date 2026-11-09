@@ -2,7 +2,6 @@ import Modal from "../../components/Modal/Modal";
 import Input from "../../components/Input/Input.jsx";
 import { useDados } from "../../context/DadosContext";
 import Select from "../../components/Select/Select.jsx";
-import Checkbox from "../../components/CheckBox/CheckBox.jsx";
 import Button from "../../components/Button/Button";
 import ButtonX from "../../components/Button/ButtonX.jsx";
 import Tabela from "../../components/TabelaTeste/TabelaT.jsx";
@@ -10,6 +9,7 @@ import BarraFiltro from "../../components/Filtro/BarraFiltro.jsx";
 import { X } from "lucide-react";
 import Form from "../../components/Forms/Forms";
 import * as S from "./Agendamentos.Styled";
+import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
 import { useEffect, useState } from "react";
 import api from "../../service/api";
 
@@ -391,19 +391,19 @@ const Agendamentos = () => {
 
   return (
     <div>
-      <S.Hagendamentos>
-        <div>
-          <h2>Agendamentos</h2>
-        </div>
-
-        <div>
+      <CabecalhoPagina
+        sobre="Agenda do petshop"
+        icone="calendar3"
+        titulo="Agendamentos"
+        subtitulo="Cada pet com o seu serviço e o seu horário."
+        acao={
           <Button
             className="btn-primary"
-            texto="Novo Agendamento"
+            texto={<><i className="bi bi-plus-lg me-1"></i> Novo Agendamento</>}
             onClick={() => setOpenModal(true)}
           />
-        </div>
-      </S.Hagendamentos>
+        }
+      />
       <S.FiltroT>
         <BarraFiltro
           busca={busca}
@@ -421,7 +421,7 @@ const Agendamentos = () => {
         />
       </S.FiltroT>
       <div>
-        <Modal largura={420} isOpen={openModal}>
+        <Modal largura={980} isOpen={openModal}>
           <Form
             // props do formulario
             hForm={
@@ -433,55 +433,95 @@ const Agendamentos = () => {
             }
             tForm={editandoId ? "Alterar agendamento" : "Novo agendamento"}
           >
-            <Select
-              texto="Pet"
-              valor={petId}
-              onChange={(e) => setPetId(e.target.value)}
-              placeholder="Escolha o pet"
-              opcoes={pets.map((p) => {
-                const dono = clientes.find((c) => c.id === p.donoId)?.nome;
-                return { valor: p.id, rotulo: `${p.nome} (${dono})` };
-              })}
-            />
-
-            <label className="form-label">Serviços</label>
-            <div className="mb-3">
-              {servicos.map((s) => (
-                <Checkbox
-                  key={s.id}
-                  id={`serv-${s.id}`}
-                  texto={`${s.nome} · ${Number(s.valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`}
-                  marcado={servicosIds.includes(s.id)}
-                  onChange={() => alternarServico(s.id)}
+            <div className="row g-4">
+              {/* ===== Esquerda: pet, data e total ===== */}
+              <div className="col-lg-5 d-flex flex-column gap-3">
+                <Select
+                  texto="Pet"
+                  valor={petId}
+                  onChange={(e) => setPetId(e.target.value)}
+                  placeholder="Escolha o pet"
+                  opcoes={pets.map((p) => {
+                    const dono = clientes.find((c) => c.id === p.donoId)?.nome;
+                    return { valor: p.id, rotulo: `${p.nome} (${dono})` };
+                  })}
                 />
-              ))}
+
+                <div className="row g-3">
+                  <div className="col-7">
+                    <Input
+                      onChange={(e) => setData(e.target.value)}
+                      valor={data}
+                      texto="Data"
+                      type="date"
+                    />
+                  </div>
+                  <div className="col-5">
+                    <Input
+                      onChange={(e) => setHorario(e.target.value)}
+                      valor={horario}
+                      texto="Horário"
+                      type="time"
+                    />
+                  </div>
+                </div>
+
+                <div className="d-flex justify-content-between align-items-center border rounded-3 px-3 py-3 mt-auto">
+                  <span className="text-secondary fw-semibold">Total</span>
+                  <span className="fw-bold fs-4">
+                    {valorTotal.toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
+                  </span>
+                </div>
+              </div>
+
+              {/* ===== Direita: serviços ===== */}
+              <div className="col-lg-7">
+                <label className="form-label">Serviços</label>
+                <div className="row g-2">
+                  {servicos.map((s) => {
+                    const marcado = servicosIds.includes(s.id);
+                    return (
+                      <div className="col-sm-6" key={s.id}>
+                        <label
+                          htmlFor={`serv-${s.id}`}
+                          className={`d-flex align-items-start gap-2 border rounded-3 p-3 h-100 ${
+                            marcado ? "border-primary bg-primary-subtle" : ""
+                          }`}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <input
+                            id={`serv-${s.id}`}
+                            className="form-check-input mt-1 flex-shrink-0"
+                            type="checkbox"
+                            checked={marcado}
+                            onChange={() => alternarServico(s.id)}
+                          />
+                          <span className="flex-grow-1">
+                            <span className="d-block fw-semibold">{s.nome}</span>
+                            {s.duracao != null && (
+                              <span className="d-block small text-secondary">{s.duracao} min</span>
+                            )}
+                          </span>
+                          <span className="fw-bold text-nowrap">
+                            {Number(s.valor).toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })}
+                          </span>
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
-            <Input
-              onChange={(e) => setData(e.target.value)}
-              valor={data}
-              texto="Data"
-              type="date"
-            />
-            <Input
-              onChange={(e) => setHorario(e.target.value)}
-              valor={horario}
-              texto="Horário"
-              type="time"
-            />
-            
-
-            <div className="fw-bold mb-2">
-              Total:{" "}
-              {valorTotal.toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              })}
-            </div>
-
-            <div className="d-flex gap-2 mt-3">
+            <div className="d-flex justify-content-end gap-2 pt-3 mt-2 border-top">
               <Button
-                className="btn-outline-secondary flex-fill"
+                className="btn-outline-secondary px-4"
                 onClick={() => {
                   setOpenModal(false);
                   setEditandoId(null);
@@ -489,13 +529,12 @@ const Agendamentos = () => {
                   setServicosIds([]);
                   setData("");
                   setHorario("");
-                  
                 }}
                 texto="Cancelar"
               />
 
               <Button
-                className="btn-primary flex-fill"
+                className="btn-primary px-4"
                 onClick={editandoId ? editarAgendamento : addAgendamento}
                 texto={editandoId ? "Salvar alterações" : "Cadastrar"}
               />

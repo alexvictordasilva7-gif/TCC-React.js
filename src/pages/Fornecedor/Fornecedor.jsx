@@ -3,6 +3,8 @@ import { useDados } from "../../context/DadosContext";
 import { categoriasProduto } from "../../utils/opcoes";
 import api from "../../service/api";
 import Modal from "../../components/Modal/Modal";
+import ButtonX from "../../components/Button/ButtonX.jsx";
+import { X } from "lucide-react";
 import Input from "../../components/Input/Input";
 import Select from "../../components/Select/Select";
 import Button from "../../components/Button/Button";
@@ -11,6 +13,7 @@ import Tabela from "../../components/TabelaTeste/TabelaT";
 import CardResumo from "../../components/Cards/CardResumo";
 import BarraFiltro from "../../components/Filtro/BarraFiltro";
 import * as S from "./Fornecedor.Styled";
+import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
 
 // 14 números -> 00.000.000/0000-00
 const formatarCnpj = (c) =>
@@ -249,21 +252,19 @@ const Fornecedor = () => {
 
   return (
     <div>
-      <S.Hfornecedor>
-        <div>
-          <h2>Fornecedores</h2>
-          <p className="text-secondary">
-            {fornecedores.length} fornecedores cadastrados
-          </p>
-        </div>
-        <div>
+      <CabecalhoPagina
+        sobre="Parceiros"
+        icone="truck"
+        titulo="Fornecedores"
+        subtitulo={`${fornecedores.length} ${fornecedores.length === 1 ? "fornecedor cadastrado" : "fornecedores cadastrados"}`}
+        acao={
           <Button
             className="btn-primary"
-            texto="Novo Fornecedor"
+            texto={<><i className="bi bi-plus-lg me-1"></i> Novo Fornecedor</>}
             onClick={abrirNovo}
           />
-        </div>
-      </S.Hfornecedor>
+        }
+      />
 
       <div className="row g-3 mb-3">
         <div className="col-md-4">
@@ -311,20 +312,21 @@ const Fornecedor = () => {
         aoExcluir={deletarFornecedor}
       />
 
-      <Modal largura={500} isOpen={openModal}>
+      <Modal largura={860} isOpen={openModal}>
         <Form
-          hForm=""
+          hForm={<ButtonX texto={<X size={16} />} onClick={fecharModal} />}
           tForm={fornecedorEditando ? "Editar fornecedor" : "Novo fornecedor"}
         >
-          <Input
-            onChange={(e) => setRazaoSocial(e.target.value)}
-            valor={razaoSocial}
-            texto="Razão Social / Nome"
-            type="text"
-          />
-
-          <div className="row">
-            <div className="col-6">
+          <div className="row g-3">
+            <div className="col-md-8">
+              <Input
+                onChange={(e) => setRazaoSocial(e.target.value)}
+                valor={razaoSocial}
+                texto="Razão Social / Nome"
+                type="text"
+              />
+            </div>
+            <div className="col-md-4">
               <Input
                 onChange={(e) => setCnpj(e.target.value)}
                 valor={cnpj}
@@ -332,7 +334,33 @@ const Fornecedor = () => {
                 type="text"
               />
             </div>
-            <div className="col-6">
+
+            <div className="col-md-4">
+              <Input
+                onChange={(e) => setNomeContato(e.target.value)}
+                valor={nomeContato}
+                texto="Nome do Contato"
+                type="text"
+              />
+            </div>
+            <div className="col-md-4">
+              <Input
+                onChange={(e) => setTelefone(e.target.value)}
+                valor={telefone}
+                texto="Telefone"
+                type="text"
+              />
+            </div>
+            <div className="col-md-4">
+              <Input
+                onChange={(e) => setEmail(e.target.value)}
+                valor={email}
+                texto="Email"
+                type="text"
+              />
+            </div>
+
+            <div className="col-md-6">
               <Select
                 texto="Categoria"
                 valor={categoria}
@@ -341,64 +369,39 @@ const Fornecedor = () => {
                 placeholder="Escolha a categoria"
               />
             </div>
-          </div>
-
-          <Input
-            onChange={(e) => setNomeContato(e.target.value)}
-            valor={nomeContato}
-            texto="Nome do Contato"
-            type="text"
-          />
-
-          <div className="row">
-            <div className="col-6">
-              <Input
-                onChange={(e) => setTelefone(e.target.value)}
-                valor={telefone}
-                texto="Telefone"
-                type="text"
-              />
-            </div>
-            <div className="col-6">
-              <Input
-                onChange={(e) => setEmail(e.target.value)}
-                valor={email}
-                texto="Email"
-                type="text"
-              />
-            </div>
-          </div>
-
-          <label className="form-label mt-3">Status</label>
-          <div className="mb-3">
-            {["Ativo", "Inativo"].map((opcao) => (
-              <div className="form-check form-check-inline" key={opcao}>
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="status"
-                  id={`status-${opcao}`}
-                  value={opcao}
-                  checked={status === opcao}
-                  onChange={(e) => setStatus(e.target.value)}
-                />
-                <label className="form-check-label" htmlFor={`status-${opcao}`}>
-                  {opcao}
-                </label>
+            <div className="col-md-6">
+              <label className="form-label">Status</label>
+              <div className="d-flex gap-4 align-items-center" style={{ height: 40 }}>
+                {["Ativo", "Inativo"].map((opcao) => (
+                  <div className="form-check mb-0" key={opcao}>
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="status"
+                      id={`status-${opcao}`}
+                      value={opcao}
+                      checked={status === opcao}
+                      onChange={(e) => setStatus(e.target.value)}
+                    />
+                    <label className="form-check-label" htmlFor={`status-${opcao}`}>
+                      {opcao}
+                    </label>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
 
-          <div className="d-flex gap-2 mt-3">
+          <div className="d-flex justify-content-end gap-2 pt-3 mt-2 border-top">
             <Button
-              className="btn-outline-secondary flex-fill"
+              className="btn-outline-secondary px-4"
               onClick={fecharModal}
               texto="Cancelar"
             />
             <Button
-              className="btn-primary flex-fill"
+              className="btn-primary px-4"
               onClick={salvarFornecedor}
-              texto={fornecedorEditando ? "Salvar" : "Cadastrar"}
+              texto={fornecedorEditando ? "Salvar alterações" : "Cadastrar fornecedor"}
             />
           </div>
         </Form>

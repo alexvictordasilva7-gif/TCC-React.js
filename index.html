@@ -4,8 +4,15 @@
     <meta charset="UTF-8" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&family=Archivo:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>petshop</title>
+    <script>
+      // aplica o tema salvo antes da tela aparecer (evita "piscar" branco no modo noturno)
+      try {
+        var t = localStorage.getItem("petshop:tema") || "claro";
+        document.documentElement.setAttribute("data-bs-theme", t === "escuro" ? "dark" : "light");
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -10,6 +10,7 @@ import { X } from "lucide-react";
 import { alerta } from "../../utils/Alertas";
 import Form from "../../components/Forms/Forms";
 import * as S from "./Servicos.Styled";
+import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
 import { useEffect, useState } from "react";
 import api from "../../service/api";
 
@@ -184,19 +185,19 @@ const Servicos = () => {
 
   return (
     <div>
-      <S.Hservico>
-        <div>
-          <h2>Serviços</h2>
-        </div>
-
-        <div>
+      <CabecalhoPagina
+        sobre="Catálogo"
+        icone="stars"
+        titulo="Serviços"
+        subtitulo={`${servicos.length} ${servicos.length === 1 ? "serviço cadastrado" : "serviços cadastrados"}`}
+        acao={
           <Button
             className="btn-primary"
-            texto="Novo Serviço"
+            texto={<><i className="bi bi-plus-lg me-1"></i> Novo Serviço</>}
             onClick={abrirNovo}
           />
-        </div>
-      </S.Hservico>
+        }
+      />
 
       <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
         {servicos.map((servico) => (
@@ -211,83 +212,90 @@ const Servicos = () => {
       </div>
 
       <div>
-        <Modal largura={420} isOpen={openModal}>
+        <Modal largura={760} isOpen={openModal}>
           <Form
             hForm={<ButtonX texto={<X size={16} />} onClick={fecharModal} />}
             tForm={servicoEditando ? "Editar serviço" : "Novo serviço"}
           >
-            <div>
-              <Select
-                texto="Tipo de serviço *"
-                valor={tipo}
-                onChange={(e) => {
-                  setTipo(e.target.value);
-                  limparErro("tipo");
-                }}
-                opcoes={servicosPet}
-                placeholder="Ex.: Banho e tosa"
-              />
-              <MsgErro>{erros.tipo}</MsgErro>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <Select
+                  texto="Tipo de serviço *"
+                  valor={tipo}
+                  onChange={(e) => {
+                    setTipo(e.target.value);
+                    limparErro("tipo");
+                  }}
+                  opcoes={servicosPet}
+                  placeholder="Ex.: Banho e tosa"
+                />
+                <MsgErro>{erros.tipo}</MsgErro>
+              </div>
+
+              <div className="col-md-6">
+                <Select
+                  texto="Categoria *"
+                  valor={categoria}
+                  onChange={(e) => {
+                    setCategoria(e.target.value);
+                    limparErro("categoria");
+                  }}
+                  opcoes={categorias}
+                  placeholder="Ex.: Estética"
+                />
+                <MsgErro>{erros.categoria}</MsgErro>
+              </div>
+
+              <div className="col-12">
+                <Input
+                  onChange={(e) => setDescricao(e.target.value)}
+                  valor={descricao}
+                  texto="Descrição"
+                  type="text"
+                  placeholder="Ex.: Banho com shampoo hipoalergênico"
+                  obrigatorio={false}
+                />
+              </div>
+
+              <div className="col-md-6">
+                <Input
+                  onChange={(e) => {
+                    setDuracao(e.target.value);
+                    limparErro("duracao");
+                  }}
+                  valor={duracao}
+                  texto="Duração (min) *"
+                  type="number"
+                  placeholder="Ex.: 60"
+                  erro={erros.duracao}
+                />
+              </div>
+
+              <div className="col-md-6">
+                <Input
+                  onChange={(e) => {
+                    setValor(e.target.value);
+                    limparErro("valor");
+                  }}
+                  valor={valor}
+                  texto="Valor (R$) *"
+                  type="number"
+                  placeholder="Ex.: 80.00"
+                  erro={erros.valor}
+                />
+              </div>
             </div>
 
-            <div>
-              <Select
-                texto="Categoria *"
-                valor={categoria}
-                onChange={(e) => {
-                  setCategoria(e.target.value);
-                  limparErro("categoria");
-                }}
-                opcoes={categorias}
-                placeholder="Ex.: Estética"
-              />
-              <MsgErro>{erros.categoria}</MsgErro>
-            </div>
-
-            <Input
-              onChange={(e) => setDescricao(e.target.value)}
-              valor={descricao}
-              texto="Descrição"
-              type="text"
-              placeholder="Ex.: Banho com shampoo hipoalergênico"
-              obrigatorio={false}
-            />
-
-            <Input
-              onChange={(e) => {
-                setDuracao(e.target.value);
-                limparErro("duracao");
-              }}
-              valor={duracao}
-              texto="Duração (min) *"
-              type="number"
-              placeholder="Ex.: 60"
-              erro={erros.duracao}
-            />
-
-            <Input
-              onChange={(e) => {
-                setValor(e.target.value);
-                limparErro("valor");
-              }}
-              valor={valor}
-              texto="Valor (R$) *"
-              type="number"
-              placeholder="Ex.: 80.00"
-              erro={erros.valor}
-            />
-
-            <div className="d-flex gap-2 mt-3">
+            <div className="d-flex justify-content-end gap-2 pt-3 mt-2 border-top">
               <Button
-                className="btn-outline-secondary flex-fill"
+                className="btn-outline-secondary px-4"
                 onClick={fecharModal}
                 texto="Cancelar"
               />
-
               <Button
-                className="btn-primary flex-fill"
+                className="btn-primary px-4"
                 onClick={salvarServico}
-                texto={servicoEditando ? "Salvar" : "Cadastrar"}
+                texto={servicoEditando ? "Salvar alterações" : "Cadastrar serviço"}
               />
             </div>
           </Form>
@@ -297,4 +305,4 @@ const Servicos = () => {
   );
 };
 
-export default Servicos;
+export default Servicos;

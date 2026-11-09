@@ -1,4 +1,5 @@
 import * as S from "./Estoque.Styled";
+import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
 import { useEffect, useState } from "react";
 import { useDados } from "../../context/DadosContext";
 import { categoriasProduto } from "../../utils/opcoes";
@@ -12,6 +13,8 @@ import Form from "../../components/Forms/Forms.jsx";
 import Modal from "../../components/Modal/Modal.jsx";
 import Input from "../../components/Input/Input.jsx";
 import Tabela from "../../components/TabelaTeste/TabelaT.jsx";
+import ButtonX from "../../components/Button/ButtonX.jsx";
+import { X } from "lucide-react";
 
 const moeda = (v) =>
   Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -311,18 +314,19 @@ function Estoque() {
 
   return (
     <div>
-      <S.Hestoque>
-        <div>
-          <h2>Estoque</h2>
-        </div>
-        <div>
+      <CabecalhoPagina
+        sobre="Controle de produtos"
+        icone="box-seam"
+        titulo="Estoque"
+        subtitulo="Rações, higiene e acessórios com alerta de estoque baixo."
+        acao={
           <Button
             className="btn-primary"
-            texto="Novo Produto"
+            texto={<><i className="bi bi-plus-lg me-1"></i> Novo Produto</>}
             onClick={abrirNovo}
           />
-        </div>
-      </S.Hestoque>
+        }
+      />
 
       {/* cards de resumo */}
       <div className="row g-3 mb-3">
@@ -371,97 +375,107 @@ function Estoque() {
         classeLinha={(p) => (estoqueBaixo(p) ? "table-warning" : "")}
       />
 
-      <Modal largura={420} isOpen={openModal}>
+      <Modal largura={820} isOpen={openModal}>
         <Form
-          hForm=""
+          hForm={<ButtonX texto={<X size={16} />} onClick={fecharModal} />}
           tForm={produtoEditando ? "Editar produto" : "Novo produto"}
         >
-          <Input
-            onChange={(e) => {
-              setNome(e.target.value);
-              limparErro("nome");
-            }}
-            valor={nome}
-            texto="Nome do Produto *"
-            type="text"
-            placeholder="Ex.: Ração Premium Cães Adultos 15kg"
-            erro={erros.nome}
-          />
+          <div className="row g-3">
+            <div className="col-md-8">
+              <Input
+                onChange={(e) => {
+                  setNome(e.target.value);
+                  limparErro("nome");
+                }}
+                valor={nome}
+                texto="Nome do Produto *"
+                type="text"
+                placeholder="Ex.: Ração Premium Cães Adultos 15kg"
+                erro={erros.nome}
+              />
+            </div>
 
-          <div>
-            <Select
-              texto="Categoria *"
-              valor={categoria}
-              onChange={(e) => {
-                setCategoria(e.target.value);
-                limparErro("categoria");
-              }}
-              opcoes={categoriasProduto}
-              placeholder="Ex.: Alimentação"
-            />
-            <MsgErro>{erros.categoria}</MsgErro>
+            <div className="col-md-4">
+              <Select
+                texto="Categoria *"
+                valor={categoria}
+                onChange={(e) => {
+                  setCategoria(e.target.value);
+                  limparErro("categoria");
+                }}
+                opcoes={categoriasProduto}
+                placeholder="Ex.: Alimentação"
+              />
+              <MsgErro>{erros.categoria}</MsgErro>
+            </div>
+
+            <div className="col-md-4">
+              <Input
+                onChange={(e) => {
+                  setQuantidade(e.target.value);
+                  limparErro("quantidade");
+                }}
+                valor={quantidade}
+                texto="Quantidade *"
+                type="number"
+                placeholder="Ex.: 50"
+                erro={erros.quantidade}
+              />
+            </div>
+
+            <div className="col-md-4">
+              <Input
+                onChange={(e) => setQtdMinima(e.target.value)}
+                valor={qtdMinima}
+                texto="Qtd. Mínima"
+                type="number"
+                placeholder="Ex.: 10"
+                obrigatorio={false}
+              />
+            </div>
+
+            <div className="col-md-4">
+              <Input
+                onChange={(e) => {
+                  setPreco(e.target.value);
+                  limparErro("preco");
+                }}
+                valor={preco}
+                texto="Preço Unitário (R$) *"
+                type="number"
+                placeholder="Ex.: 129.90"
+                erro={erros.preco}
+              />
+            </div>
+
+            <div className="col-12">
+              <Select
+                texto="Fornecedor *"
+                valor={fornecedorId}
+                onChange={(e) => {
+                  setFornecedorId(e.target.value);
+                  limparErro("fornecedorId");
+                }}
+                opcoes={fornecedores.map((f) => ({
+                  valor: f.id,
+                  rotulo: nomeFornecedor(f),
+                }))}
+                placeholder="Ex.: Pet Foods Distribuidora"
+              />
+              <MsgErro>{erros.fornecedorId}</MsgErro>
+            </div>
           </div>
 
-          <Input
-            onChange={(e) => {
-              setQuantidade(e.target.value);
-              limparErro("quantidade");
-            }}
-            valor={quantidade}
-            texto="Quantidade *"
-            type="number"
-            placeholder="Ex.: 50"
-            erro={erros.quantidade}
-          />
-
-          <Input
-            onChange={(e) => setQtdMinima(e.target.value)}
-            valor={qtdMinima}
-            texto="Qtd. Mínima"
-            type="number"
-            placeholder="Ex.: 10"
-            obrigatorio={false}
-          />
-
-          <Input
-            onChange={(e) => {
-              setPreco(e.target.value);
-              limparErro("preco");
-            }}
-            valor={preco}
-            texto="Preço Unitário (R$) *"
-            type="number"
-            placeholder="Ex.: 129.90"
-            erro={erros.preco}
-          />
-
-          <div>
-            <Select
-              texto="Fornecedor *"
-              valor={fornecedorId}
-              onChange={(e) => {
-                setFornecedorId(e.target.value);
-                limparErro("fornecedorId");
-              }}
-              opcoes={fornecedores.map((f) => ({
-                valor: f.id,
-                rotulo: nomeFornecedor(f),
-              }))}
-              placeholder="Ex.: Pet Foods Distribuidora"
-            />
-            <MsgErro>{erros.fornecedorId}</MsgErro>
-          </div>
-
-          <div className="d-flex gap-2 mt-3">
+          <div className="d-flex justify-content-end gap-2 pt-3 mt-2 border-top">
             <Button
-              className="btn-outline-secondary flex-fill"
+              className="btn-outline-secondary px-4"
               onClick={fecharModal}
               texto="Cancelar"
             />
             <Button
-              className="btn-primary flex-fill"
+              className="btn-primary px-4"
               onClick={salvarProduto}
-              texto={produtoEditando ? "Salvar" : "Cadastrar"}
+              texto={produtoEditando ? "Salvar alterações" : "Cadastrar produto"}
             />
           </div>
         </Form>
@@ -470,4 +484,4 @@ function Estoque() {
   );
 }
 
-export default Estoque;
+export default Estoque;
