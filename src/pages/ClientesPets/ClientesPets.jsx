@@ -262,7 +262,7 @@ export default function ClientesPets() {
   return (
     <div className="ps-tema">
       <CabecalhoPagina
-        sobre="Cadastro unificado"
+        sobre="Cadastro"
         icone="people"
         titulo="Clientes & Pets"
         subtitulo="Tutor e seus pets."

@@ -1,9 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Bungee+Spice&display=swap');
-
-* {
-  /* Isso força TODOS os elementos (h1, p, button) a usarem a fonte */
-  font-family: 'Bungee Spice', sans-serif !important; 
-}
 
 body {
   margin: 0;

@@ -1,5 +1,6 @@
 import * as S from "./Estoque.Styled";
 import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
+import BarraFiltro from "../../components/Filtro/BarraFiltro.jsx";
 import { useEffect, useState } from "react";
 import { useDados } from "../../context/DadosContext";
 import { categoriasProduto } from "../../utils/opcoes";
@@ -59,7 +60,8 @@ const MsgErro = ({ children }) =>
 
 function Estoque() {
   const { produtos, setProdutos, fornecedores, setFornecedores } = useDados();
-
+  const [busca, setBusca] = useState("");
+  const [filtroAtivo, setFiltroAtivo] = useState("todos");
   const [openModal, setOpenModal] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState(null);
   const [nome, setNome] = useState("");
@@ -175,6 +177,45 @@ function Estoque() {
     setErros((prev) => ({ ...prev, [campo]: "" }));
   }
 
+  // ---------- filtro e busca ----------
+  const semAcento = (t) =>
+    String(t ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+  const filtros = [
+    { chave: "todos", rotulo: "Todos", quantidade: produtos.length },
+    {
+      chave: "baixo",
+      rotulo: "Estoque baixo",
+      quantidade: produtosBaixos.length,
+    },
+    ...categoriasProduto.map((c) => ({
+      chave: c.valor,
+      rotulo: c.rotulo,
+      quantidade: produtos.filter((p) => p.categoria === c.valor).length,
+    })),
+  ];
+
+  const visiveis = produtos.filter((p) => {
+    const passaFiltro =
+      filtroAtivo === "todos" ||
+      (filtroAtivo === "baixo" ? estoqueBaixo(p) : p.categoria === filtroAtivo);
+
+    const texto = semAcento(busca);
+    const fornecedor = fornecedores.find(
+      (f) => String(f.id) === String(p.fornecedorId),
+    );
+    const passaBusca = [
+      p.nome,
+      rotuloCategoria(p.categoria),
+      nomeFornecedor(fornecedor),
+    ].some((campo) => semAcento(campo).includes(texto));
+
+    return passaFiltro && passaBusca;
+  });
+
   // ---------- salvar e excluir ----------
   async function salvarProduto() {
     if (!validar()) return;
@@ -207,9 +248,7 @@ function Estoque() {
 
         setProdutos((atuais) =>
           atuais.map((p) =>
-            String(p.id) === String(produtoEditando.id)
-              ? produtoAtualizado
-              : p,
+            String(p.id) === String(produtoEditando.id) ? produtoAtualizado : p,
           ),
         );
         alerta.sucesso("Produto atualizado com sucesso!");
@@ -322,7 +361,11 @@ function Estoque() {
         acao={
           <Button
             className="btn-primary"
-            texto={<><i className="bi bi-plus-lg me-1"></i> Novo Produto</>}
+            texto={
+              <>
+                <i className="bi bi-plus-lg me-1"></i> Novo Produto
+              </>
+            }
             onClick={abrirNovo}
           />
         }
@@ -366,10 +409,18 @@ function Estoque() {
         titulo="Produtos com estoque baixo"
         itens={produtosBaixos.map((p) => p.nome)}
       />
+      <BarraFiltro
+        busca={busca}
+        aoBuscar={setBusca}
+        placeholder="Buscar por produto, categoria ou fornecedor..."
+        filtros={filtros}
+        filtroAtivo={filtroAtivo}
+        aoMudarFiltro={setFiltroAtivo}
+      />
 
       <Tabela
         campos={camposProdutos}
-        dados={produtos}
+        dados={visiveis}
         aoEditar={abrirEditar}
         aoExcluir={deletarProduto}
         classeLinha={(p) => (estoqueBaixo(p) ? "table-warning" : "")}
@@ -475,7 +526,9 @@ function Estoque() {
             <Button
               className="btn-primary px-4"
               onClick={salvarProduto}
-              texto={produtoEditando ? "Salvar alterações" : "Cadastrar produto"}
+              texto={
+                produtoEditando ? "Salvar alterações" : "Cadastrar produto"
+              }
             />
           </div>
         </Form>
@@ -484,4 +537,4 @@ function Estoque() {
   );
 }
 
-export default Estoque;
+export default Estoque;

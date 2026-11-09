@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import CabecalhoPagina from '../../components/CabecalhoPagina/CabecalhoPagina.jsx';
 import { 
   DollarSign, 
   Wrench, 
@@ -134,11 +135,12 @@ export default function Dashboard() {
   return (
     <Container>
       <Header>
-        <div>
-          <h1>Bom dia, Admin</h1>
-          <p>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-        </div>
-
+        <CabecalhoPagina
+          sobre="Dashboard"
+          icone="house"
+          titulo="Dashboard"
+          subtitulo="Resumo geral do sistema, com métricas e gráficos."
+        />
         <PeriodSelector>
           {[
             { label: '7 dias', dias: 7 },
