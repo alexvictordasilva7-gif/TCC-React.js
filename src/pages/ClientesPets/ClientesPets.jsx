@@ -14,13 +14,7 @@ import { normalizarPet, lista, mensagemDeErro } from "../../utils/normalizar";
 import api from "../../service/api";
 import * as S from "./ClientesPets.Styled";
 
-/*
-  CLIENTES & PETS — cadastro unificado
-  Usa as MESMAS rotas que as telas antigas de Clientes e Pets usavam:
-    Tutor: GET/POST/PUT/DELETE /api/tutores
-    Pet:   GET/POST/PUT/DELETE /api/pets   (dono enviado em tutorIds: [id])
-  Nada muda no back.
-*/
+
 
 const CORES = ["#1d5bf0", "#7c4dff", "#f5a04a", "#22a06b", "#e5534b"];
 
@@ -271,7 +265,7 @@ export default function ClientesPets() {
         sobre="Cadastro unificado"
         icone="people"
         titulo="Clientes & Pets"
-        subtitulo="Tutor e seus animais organizados juntos, em um só lugar."
+        subtitulo="Tutor e seus pets."
         acao={
           <S.BotaoNovo type="button" onClick={abrirNovo}>
             <span className="icone">
