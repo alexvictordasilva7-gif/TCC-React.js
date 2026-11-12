@@ -1,6 +1,7 @@
 import * as S from "./Estoque.Styled";
-import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
 import BarraFiltro from "../../components/Filtro/BarraFiltro.jsx";
+import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
+import MsgErro from "../../components/AlertaAviso/MsgErroEstoque.jsx";
 import { useEffect, useState } from "react";
 import { useDados } from "../../context/DadosContext";
 import { categoriasProduto } from "../../utils/opcoes";
@@ -41,22 +42,7 @@ const formatarData = (iso) => {
   return `${dia}/${mes}/${ano}`;
 };
 
-// Aviso de erro exibido embaixo dos campos (usado nos Selects, que ainda não têm a prop "erro")
-const MsgErro = ({ children }) =>
-  children ? (
-    <small
-      role="alert"
-      style={{
-        display: "block",
-        marginTop: 4,
-        color: "#e5534b",
-        fontSize: "0.8rem",
-        fontWeight: 500,
-      }}
-    >
-      {children}
-    </small>
-  ) : null;
+
 
 function Estoque() {
   const { produtos, setProdutos, fornecedores, setFornecedores } = useDados();
