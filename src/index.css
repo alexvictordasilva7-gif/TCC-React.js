@@ -1,9 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Bungee+Spice&display=swap');
-
-* {
-  /* Isso força TODOS os elementos (h1, p, button) a usarem a fonte */
-  font-family: 'Bungee Spice', sans-serif !important; 
-}
 
 body {
   margin: 0;
@@ -38,3 +32,25 @@ body {
 .pet-erro    .pet-toast-progress { background: #e5534b; }
 .pet-aviso   .pet-toast-progress { background: #f5a623; }
 .pet-info    .pet-toast-progress { background: #3b82f6; }
+/* ===== remove a cor do preenchimento automático do navegador =====
+   O Chrome pinta o campo (azul/cinza) quando completa e-mail ou senha salvos.
+   A sombra interna cobre essa cor com o fundo do próprio campo, e a transição
+   longa impede o navegador de trocar a cor. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--texto, var(--ps-texto, #111827)) !important;
+  caret-color: var(--texto, var(--ps-texto, #111827));
+  -webkit-box-shadow: 0 0 0 1000px var(--fundo-autofill, var(--ps-superficie, #ffffff)) inset !important;
+  box-shadow: 0 0 0 1000px var(--fundo-autofill, var(--ps-superficie, #ffffff)) inset !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* nos campos de login e cadastro, usa o fundo da própria caixa */
+.auth-input {
+  --fundo-autofill: var(--fundo-input);
+}
+.auth-input--destaque {
+  --fundo-autofill: var(--fundo-input-destaque);
+}

@@ -11,6 +11,7 @@ export const TabelaCaixa = styled.div`
 
 export const Celula = styled.span`
   padding:10px;
+  text-align: center;
 
   ${(props) =>
     props.$cabecalho &&

@@ -14,6 +14,11 @@ import CardResumo from "../../components/Cards/CardResumo";
 import BarraFiltro from "../../components/Filtro/BarraFiltro";
 import * as S from "./Fornecedor.Styled";
 import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
+import CampoEndereco, {
+  enderecoVazio,
+  lerEndereco,
+  montarEndereco,
+} from "../../components/CampoEndereco/CampoEndereco.jsx";
 
 // 14 números -> 00.000.000/0000-00
 const formatarCnpj = (c) =>
@@ -38,6 +43,7 @@ const Fornecedor = () => {
   const [cnpj, setCnpj] = useState("");
   const [categoria, setCategoria] = useState("");
   const [nomeContato, setNomeContato] = useState("");
+  const [endereco, setEndereco] = useState(enderecoVazio);
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("Ativo");
@@ -77,6 +83,7 @@ const Fornecedor = () => {
     setNomeContato("");
     setTelefone("");
     setEmail("");
+    setEndereco(enderecoVazio);
     setStatus("Ativo");
   }
 
@@ -93,6 +100,7 @@ const Fornecedor = () => {
     setNomeContato(f.nomeContato ?? "");
     setTelefone(f.telefone ?? "");
     setEmail(f.email ?? "");
+    setEndereco(lerEndereco(f.endereco));
     setStatus(f.status ?? "Ativo");
     setFornecedorEditando(f);
     setOpenModal(true);
@@ -121,10 +129,14 @@ const Fornecedor = () => {
       categoria, 
       telefone: telefone || null,
       email: email || null,
+      // TODO back: o Fornecedor ainda não tem "cep" nem "endereco".
+      // Hoje o back ignora estes dois; passam a ser salvos quando os campos existirem.
+      cep: endereco.cep.replace(/\D/g, "") || null,
+      endereco: montarEndereco(endereco) || null,
     };
 
     // o que só existe no front
-    const soFront = { categoria, status };
+    const soFront = { categoria, status, endereco: dadosBack.endereco };
 
     try {
       if (fornecedorEditando) {
@@ -189,6 +201,7 @@ const Fornecedor = () => {
     const passaBusca = [
       f.razaoSocial,
       f.nomeContato,
+      f.endereco, // dá para buscar por rua, bairro, cidade ou CEP
       rotuloCategoria(f.categoria),
     ].some((campo) => (campo ?? "").toLowerCase().includes(texto));
     return passaFiltro && passaBusca;
@@ -229,6 +242,24 @@ const Fornecedor = () => {
           </div>
         </div>
       ),
+    },
+    {
+      chave: "endereco",
+      rotulo: "Endereço",
+      // mesmo padrão do card de tutor em Clientes & Pets: ícone de local + texto
+      render: (f) =>
+        f.endereco ? (
+          <span
+            className="d-inline-block text-center text-secondary"
+            style={{ fontSize: "0.8rem", maxWidth: 260, whiteSpace: "normal" }}
+          >
+            <i className="bi bi-geo-alt text-primary me-1" aria-hidden="true"></i>
+            {/* hífen que não quebra: o CEP fica inteiro na mesma linha */}
+            {f.endereco.replace(/(\d{5})-(\d{3})/, "$1\u2011$2")}
+          </span>
+        ) : (
+          <span className="text-secondary">—</span>
+        ),
     },
     { chave: "cnpj", rotulo: "CNPJ", render: (f) => formatarCnpj(f.cnpj) },
     {
@@ -299,7 +330,7 @@ const Fornecedor = () => {
       <BarraFiltro
         busca={busca}
         aoBuscar={setBusca}
-        placeholder="Buscar fornecedor, contato, categoria..."
+        placeholder="Buscar fornecedor, contato, categoria ou endereço..."
         filtros={filtros}
         filtroAtivo={filtroAtivo}
         aoMudarFiltro={setFiltroAtivo}
@@ -358,6 +389,13 @@ const Fornecedor = () => {
                 texto="Email"
                 type="text"
               />
+            </div>
+
+            <div className="col-12">
+              <label className="form-label fw-semibold mb-0">Endereço</label>
+            </div>
+            <div className="col-12">
+              <CampoEndereco valor={endereco} onChange={setEndereco} />
             </div>
 
             <div className="col-md-6">

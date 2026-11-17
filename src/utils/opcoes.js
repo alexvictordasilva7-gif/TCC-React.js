@@ -38,3 +38,10 @@ export const categoriasProduto = [
   { valor: "BRINQUEDOS", rotulo: "Brinquedos" },
   { valor: "MEDICAMENTOS", rotulo: "Medicamentos" },
 ];
+
+// mesmos valores do enum FormaDePagamento do back
+export const formasPagamento = [
+  { valor: "PIX", rotulo: "Pix" },
+  { valor: "DINHEIRO", rotulo: "Dinheiro" },
+  { valor: "CARTAO", rotulo: "Cartão" },
+];

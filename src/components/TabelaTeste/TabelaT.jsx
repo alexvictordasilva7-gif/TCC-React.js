@@ -10,14 +10,14 @@ export default function Tabela({ campos, dados, aoEditar, aoExcluir, classeLinha
             {campos.map((campo) => (
               <th
                 key={campo.chave}
-                className="text-uppercase text-secondary fw-normal text-nowrap py-3 px-4"
+                className="text-uppercase text-secondary fw-normal text-nowrap py-3 px-4 text-center"
                 style={{ fontSize: "0.8rem", letterSpacing: "0.05em" }}
               >
                 {campo.rotulo}
               </th>
             ))}
             <th
-              className="text-uppercase text-secondary fw-normal py-3 px-4"
+              className="text-uppercase text-secondary fw-normal py-3 px-4 text-center"
               style={{ fontSize: "0.8rem", letterSpacing: "0.05em" }}
             >
               Ações
@@ -30,15 +30,17 @@ export default function Tabela({ campos, dados, aoEditar, aoExcluir, classeLinha
               {campos.map((campo) => (
                 <td
                   key={campo.chave}
-                  className={`py-3 px-4 small ${campo.classe ?? ""}`}
+                  className={`py-3 px-4 small text-center ${campo.classe ?? ""}`}
                 >
                   {campo.render ? campo.render(item) : item[campo.chave]}
                 </td>
               ))}
-              <td className="py-3 px-4">
+              <td className="py-3 px-4 text-nowrap">
+                {/* editar e excluir sempre lado a lado */}
+                <div className="d-flex align-items-center justify-content-center gap-3">
                 {aoEditar && (
                   <button
-                    className="btn btn-link p-0 me-3 text-primary"
+                    className="btn btn-link p-0 text-primary"
                     onClick={() => aoEditar(item)}
                     title="Editar"
                   >
@@ -54,6 +56,7 @@ export default function Tabela({ campos, dados, aoEditar, aoExcluir, classeLinha
                     <i className="bi bi-trash"></i>
                   </button>
                 )}
+                </div>
               </td>
             </tr>
           ))}

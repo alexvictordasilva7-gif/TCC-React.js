@@ -1,4 +1,14 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+
+// histórico de vendas guardado no navegador até o back ter POST /api/vendas
+const CHAVE_VENDAS = "petshop:vendas";
+function lerVendas() {
+  try {
+    return JSON.parse(localStorage.getItem(CHAVE_VENDAS)) ?? [];
+  } catch {
+    return [];
+  }
+}
 
 const DadosContext = createContext();
 
@@ -10,6 +20,15 @@ export function DadosProvider({ children }) {
   const [produtos, setProdutos] = useState([]);
   const [fornecedores, setFornecedores] = useState([
   ]);
+  const [vendas, setVendas] = useState(lerVendas);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAVE_VENDAS, JSON.stringify(vendas));
+    } catch {
+      // sem problema: só não guarda o histórico
+    }
+  }, [vendas]);
   return (
     <DadosContext.Provider
       value={{
@@ -25,6 +44,8 @@ export function DadosProvider({ children }) {
         setProdutos,
         fornecedores,
         setFornecedores,
+        vendas,
+        setVendas,
         
       }}
     >

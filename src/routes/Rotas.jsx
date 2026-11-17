@@ -9,6 +9,8 @@ import Cadastro from "../pages/Cadastro/Cadastro.jsx";
 import Estoque from "../pages/Estoque/Estoque.jsx";
 import Fornecedor from "../pages/Fornecedor/Fornecedor.jsx";
 import Agendamentos from "../pages/Agendamentos/Agendamentos.jsx";
+import Vendas from "../pages/Vendas/Vendas.jsx";
+import Relatorios from "../pages/Relatorios/Relatorios.jsx";
 
 function Rotas() {
   return (
@@ -29,6 +31,8 @@ function Rotas() {
           <Route path="/Estoque" element={<Estoque />} />
           <Route path="/Fornecedor" element={<Fornecedor />} />
           <Route path="/Agendamentos" element={<Agendamentos />} />
+          <Route path="/Vendas" element={<Vendas />} />
+          <Route path="/Relatorios" element={<Relatorios />} />
         </Route>
       </Route>
     </Routes>

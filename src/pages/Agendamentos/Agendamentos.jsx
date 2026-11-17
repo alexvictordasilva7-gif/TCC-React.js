@@ -328,6 +328,21 @@ const Agendamentos = () => {
     cancelado: "bg-danger-subtle text-danger-emphasis",
   };
 
+  // cor do status: agendado = amarelo, concluído = verde, cancelado = vermelho
+  const estiloStatus = (status) => {
+    const cores = {
+      CONCLUIDO: { fundo: "#dcfce7", texto: "#15803d", borda: "#86efac" },
+      CANCELADO: { fundo: "#fee2e2", texto: "#b91c1c", borda: "#fca5a5" },
+    };
+    const c = cores[status] ?? { fundo: "#fef3c7", texto: "#b45309", borda: "#fcd34d" };
+    return {
+      backgroundColor: c.fundo,
+      color: c.texto,
+      borderColor: c.borda,
+      opacity: 1, // o select travado (concluído/cancelado) não fica apagado
+    };
+  };
+
   const camposAgenda = [
     {
       chave: "pet",
@@ -375,8 +390,8 @@ const Agendamentos = () => {
       rotulo: "Status",
       render: (a) => (
         <select
-          className="form-select form-select-sm"
-          style={{ width: "auto" }}
+          className="form-select form-select-sm mx-auto fw-semibold"
+          style={{ width: "auto", ...estiloStatus(a.status) }}
           value={a.status}
           onChange={(e) => mudarStatus(a.id, e.target.value)}
           disabled={a.status === "CONCLUIDO" || a.status === "CANCELADO"}
