@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { X } from "lucide-react";
+import { X, PawPrint } from "lucide-react";
 import Modal from "../../components/Modal/Modal";
 import Form from "../../components/Forms/Forms";
 import Input from "../../components/Input/Input.jsx";
 import ButtonX from "../../components/Button/ButtonX.jsx";
+import Button from "../../components/Button/Button.jsx";
 import ModalRodape from "../../components/Modal/ModalRodape.jsx";
 import BarraFiltro from "../../components/Filtro/BarraFiltro.jsx";
 import CardResumo from "../../components/Cards/CardResumo.jsx";
@@ -12,11 +13,15 @@ import { useDados } from "../../context/DadosContext";
 import { alerta } from "../../utils/Alertas";
 import { normalizarPet, lista, mensagemDeErro } from "../../utils/normalizar";
 import api from "../../service/api";
+import CampoEndereco, {
+  enderecoVazio,
+  lerEndereco,
+  montarEndereco,
+} from "../../components/CampoEndereco/CampoEndereco.jsx";
 import * as S from "./ClientesPets.Styled";
 
 
 
-const CORES = ["#1d5bf0", "#7c4dff", "#f5a04a", "#22a06b", "#e5534b"];
 
 const iniciais = (nome = "") =>
   nome.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join("") || "?";
@@ -44,6 +49,8 @@ export default function ClientesPets() {
   // ----- modal -----
   const [modalAberto, setModalAberto] = useState(false);
   const [tutor, setTutor] = useState(tutorVazio);
+  // endereço em campos (CEP, rua, número...); vira um texto só ao salvar
+  const [endereco, setEndereco] = useState(enderecoVazio);
   const [petsForm, setPetsForm] = useState([]);
   const [petsRemovidos, setPetsRemovidos] = useState([]);
   const [erros, setErros] = useState({});
@@ -92,6 +99,7 @@ export default function ClientesPets() {
   /* ---------- abrir / fechar ---------- */
   function abrirNovo() {
     setTutor(tutorVazio);
+    setEndereco(enderecoVazio);
     setPetsForm([petVazio()]);
     setPetsRemovidos([]);
     setErros({});
@@ -107,6 +115,7 @@ export default function ClientesPets() {
       telefone: t.telefone ?? "",
       endereco: t.endereco ?? "",
     });
+    setEndereco(lerEndereco(t.endereco));
     setPetsForm(
       t.pets.map((p) => ({
         chave: `pet-${p.id}`,
@@ -164,7 +173,7 @@ export default function ClientesPets() {
         nome: tutor.nome.trim(),
         email: tutor.email.trim(),
         telefone: tutor.telefone.trim(),
-        endereco: tutor.endereco.trim(),
+        endereco: montarEndereco(endereco),
       };
 
       let tutorSalvo;
@@ -267,22 +276,21 @@ export default function ClientesPets() {
         titulo="Clientes & Pets"
         subtitulo="Tutor e seus pets."
         acao={
-          <S.BotaoNovo type="button" onClick={abrirNovo}>
-            <span className="icone">
-              <i className="bi bi-person" aria-hidden="true"></i>
-              <span className="mais" aria-hidden="true">+</span>
-            </span>
-            <span>
-              <strong>Novo cadastro</strong>
-              <small>Tutor e pet conectados</small>
-            </span>
-          </S.BotaoNovo>
+          <Button
+            className="btn-primary"
+            texto={
+              <>
+                <i className="bi bi-plus-lg me-1"></i> Novo Clientes &amp; Pets
+              </>
+            }
+            onClick={abrirNovo}
+          />
         }
       />
 
       <S.Numeros>
-        <CardResumo tema titulo="Tutores" valor={clientes.length} icone="person" destaque />
-        <CardResumo tema titulo="Pets cadastrados" valor={pets.length} icone="heart" corIcone="#e8731a" />
+        <CardResumo tema titulo="Tutores" valor={clientes.length} icone="person" />
+        <CardResumo tema titulo="Pets cadastrados" valor={pets.length} icone={<PawPrint size={20} />} corIcone="#e8731a" />
       </S.Numeros>
 
       <BarraFiltro
@@ -304,8 +312,8 @@ export default function ClientesPets() {
         </S.EstadoVazio>
       ) : (
         <S.Lista>
-          {visiveis.map((t, i) => (
-            <S.Card key={t.id} $cor={CORES[i % CORES.length]}>
+          {visiveis.map((t) => (
+            <S.Card key={t.id}>
               <S.Tutor>
                 <S.LinhaTutor>
                   <S.Avatar className="ps-fonte-titulo" aria-hidden="true">{iniciais(t.nome)}</S.Avatar>
@@ -344,7 +352,7 @@ export default function ClientesPets() {
                     {t.pets.map((p) => (
                       <S.Pet key={p.id}>
                         <span className="icone" aria-hidden="true">
-                          <i className="bi bi-heart-fill"></i>
+                          <PawPrint size={16} />
                         </span>
                         <div className="textos">
                           <strong>{p.nome}</strong>
@@ -376,7 +384,7 @@ export default function ClientesPets() {
             </S.TituloSecao>
 
             <div className="row g-3">
-              <div className="col-md-6">
+              <div className="col-md-5">
                 <Input
                   tema
                   texto="Nome completo *"
@@ -390,7 +398,7 @@ export default function ClientesPets() {
                   autoFocus
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-md-4">
                 <Input
                   tema
                   texto="E-mail"
@@ -405,7 +413,7 @@ export default function ClientesPets() {
                   erro={erros.email}
                 />
               </div>
-              <div className="col-md-4">
+              <div className="col-md-3">
                 <Input
                   tema
                   texto="Telefone *"
@@ -419,17 +427,10 @@ export default function ClientesPets() {
                   erro={erros.telefone}
                 />
               </div>
-              <div className="col-md-8">
-                <Input
-                  tema
-                  texto="Endereço"
-                  valor={tutor.endereco}
-                  onChange={(e) => setTutor({ ...tutor, endereco: e.target.value })}
-                  placeholder="Rua, número, bairro, cidade"
-                  obrigatorio={false}
-                />
-              </div>
             </div>
+
+            {/* digite o CEP: rua, bairro, cidade e UF são preenchidos pelo back (ViaCEP) */}
+            <CampoEndereco tema valor={endereco} onChange={setEndereco} />
           </S.Secao>
 
           <S.Secao>
@@ -451,7 +452,7 @@ export default function ClientesPets() {
               <S.PetForm>
                 <div className="topo">
                   <span className="titulo">
-                    <span className="bolinha" aria-hidden="true"><i className="bi bi-heart"></i></span>
+                    <span className="bolinha" aria-hidden="true"><PawPrint size={14} /></span>
                     Pet {i + 1}
                   </span>
                   <S.BotaoIcone type="button" $perigo onClick={() => removerPet(p)} aria-label={`Remover pet ${i + 1}`} title="Remover pet">
@@ -496,7 +497,7 @@ export default function ClientesPets() {
             textoConfirmar={salvando ? "Salvando..." : "Salvar cadastro"}
             extra={
               <span className="text-secondary small">
-                <i className="bi bi-heart me-1"></i>
+                <PawPrint size={14} className="me-1" style={{ verticalAlign: "-2px" }} />
                 {petsForm.filter((p) => p.nome.trim()).length} pet(s) neste cadastro
               </span>
             }

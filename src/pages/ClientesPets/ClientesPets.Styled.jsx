@@ -1,63 +1,5 @@
 import styled from "styled-components";
 
-/* ===== Botão "Novo cadastro" ===== */
-export const BotaoNovo = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 22px 12px 12px;
-  border: none;
-  border-radius: 18px;
-  background: var(--ps-degrade-botao);
-  color: #fff;
-  text-align: left;
-  box-shadow: var(--ps-sombra-botao);
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-  }
-  &:focus-visible {
-    outline: 3px solid var(--bs-focus-ring-color);
-    outline-offset: 2px;
-  }
-
-  .icone {
-    position: relative;
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-  }
-  .mais {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #f5a04a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-  }
-  strong {
-    display: block;
-    font-size: 15px;
-  }
-  small {
-    display: block;
-    font-size: 12px;
-    opacity: 0.88;
-  }
-`;
-
 /* ===== Números ===== */
 export const Numeros = styled.div`
   display: grid;
@@ -86,7 +28,6 @@ export const Card = styled.li`
   border-radius: 20px;
   background: var(--ps-superficie);
   border: 1px solid var(--ps-borda);
-  border-left: 6px solid ${({ $cor }) => $cor};
   box-shadow: var(--ps-sombra);
   overflow: hidden;
 `;

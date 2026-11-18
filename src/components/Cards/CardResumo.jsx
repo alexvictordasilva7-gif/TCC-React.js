@@ -1,3 +1,7 @@
+// icone: nome do Bootstrap Icons ("people") ou um componente pronto (<PawPrint />)
+const desenharIcone = (icone, classe) =>
+  typeof icone === "string" ? <i className={`bi bi-${icone} ${classe}`}></i> : icone;
+
 export default function CardResumo(props) {
   // tema: usa o visual do Clientes & Pets (sem ele, fica o visual padrão)
   if (props.tema) return <CardResumoTema {...props} />;
@@ -34,7 +38,7 @@ function CardResumoPadrao({
             className="rounded d-flex align-items-center justify-content-center"
             style={{ width: 48, height: 48, backgroundColor: fundoIcone, color: corIcone }}
           >
-            <i className={`bi bi-${icone} fs-4`}></i>
+            {desenharIcone(icone, "fs-4")}
           </div>
         )}
       </div>
@@ -103,7 +107,7 @@ function CardResumoTema({
             }}
             aria-hidden="true"
           >
-            <i className={`bi bi-${icone} fs-5`}></i>
+            {desenharIcone(icone, "fs-5")}
           </div>
         )}
       </div>

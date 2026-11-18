@@ -1,103 +1,246 @@
+import styled from "styled-components";
+import { PawPrint } from "lucide-react";
+
+// Cores de status iguais às da tela de Agendamentos
 const STATUS = {
-  AGENDADO:  { rotulo: "agendados",  fundo: "#fef3c7", cor: "#b45309" },
-  CONCLUIDO: { rotulo: "concluídos", fundo: "#dcfce7", cor: "#15803d" },
-  CANCELADO: { rotulo: "cancelados", fundo: "#fee2e2", cor: "#b91c1c" },
+  AGENDADO: { rotulo: "agendados", singular: "Agendado", fundo: "#fef3c7", cor: "#b45309", borda: "#fcd34d" },
+  CONCLUIDO: { rotulo: "concluídos", singular: "Concluído", fundo: "#dcfce7", cor: "#15803d", borda: "#86efac" },
+  CANCELADO: { rotulo: "cancelados", singular: "Cancelado", fundo: "#fee2e2", cor: "#b91c1c", borda: "#fca5a5" },
 };
 
 const moeda = (v) =>
   Number(v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+/* ===== estilos (mesmo padrão dos cards de Clientes & Pets) ===== */
+const Caixa = styled.section`
+  border-radius: 20px;
+  background: var(--ps-superficie);
+  border: 1px solid var(--ps-borda);
+  box-shadow: var(--ps-sombra);
+  color: var(--ps-texto);
+  overflow: hidden;
+`;
+
+const Topo = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--ps-borda);
+
+  .sobre {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ps-texto-suave);
+  }
+
+  h2 {
+    margin: 2px 0 0;
+    font-family: var(--ps-fonte-titulo);
+    font-size: 20px;
+    font-weight: 800;
+  }
+`;
+
+const Pilula = styled.button`
+  border: 1.5px solid ${({ $ativo, $s }) => ($ativo ? $s.cor : "transparent")};
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  background: ${({ $s }) => $s.fundo};
+  color: ${({ $s }) => $s.cor};
+  opacity: ${({ $apagada }) => ($apagada ? 0.55 : 1)};
+`;
+
+const Lista = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 6px 22px;
+  max-height: 420px; /* 20 agendamentos não quebram o layout */
+  overflow-y: auto;
+`;
+
+const Linha = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+
+  & + & {
+    border-top: 1px solid var(--ps-borda);
+  }
+
+  .icone {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ps-destaque-clara);
+    color: var(--ps-destaque);
+  }
+
+  .textos {
+    flex: 1;
+    min-width: 0;
+
+    strong,
+    small {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    small {
+      color: var(--ps-texto-suave);
+    }
+    .tutor {
+      font-weight: 400;
+      color: var(--ps-texto-suave);
+    }
+  }
+
+  .horario {
+    text-align: right;
+
+    strong {
+      display: block;
+      font-family: var(--ps-fonte-titulo);
+      font-size: 17px;
+    }
+    small {
+      color: var(--ps-texto-suave);
+    }
+  }
+
+  .acoes {
+    width: 190px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+
+    .acoes {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+`;
+
+const BotaoAcao = styled.button`
+  border: 1.5px solid ${({ $s }) => $s.borda};
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--ps-superficie);
+  color: ${({ $s }) => $s.cor};
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: ${({ $s }) => $s.fundo};
+  }
+`;
+
+const Etiqueta = styled.span`
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  background: ${({ $s }) => $s.fundo};
+  color: ${({ $s }) => $s.cor};
+`;
+
+const Vazio = styled.p`
+  margin: 0;
+  padding: 32px 0;
+  text-align: center;
+  color: var(--ps-texto-suave);
+`;
 
 export default function AgendamentosHoje({ itens, filtro, aoMudarFiltro, aoConcluir, aoCancelar }) {
   const contar = (s) => itens.filter((i) => i.status === s).length;
   const visiveis = filtro ? itens.filter((i) => i.status === filtro) : itens;
 
   return (
-    <div
-      className="rounded-4 shadow-sm p-4"
-      style={{ background: "var(--ps-superficie)", border: "1px solid var(--ps-borda)" }}
-    >
-      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-        <h2 className="fs-5 fw-bold mb-0">Agendamentos de hoje</h2>
+    <Caixa>
+      <Topo>
+        <div>
+          <span className="sobre">Agenda</span>
+          <h2>Agendamentos de hoje</h2>
+        </div>
 
         {/* as pílulas também são o filtro: clique para filtrar, clique de novo para limpar */}
-        <div className="d-flex gap-2">
+        <div className="d-flex flex-wrap gap-2">
           {Object.entries(STATUS).map(([chave, s]) => {
             const ativo = filtro === chave;
             return (
-              <button
+              <Pilula
                 key={chave}
                 type="button"
+                $s={s}
+                $ativo={ativo}
+                $apagada={filtro && !ativo}
+                aria-pressed={ativo}
                 onClick={() => aoMudarFiltro(ativo ? null : chave)}
-                className="badge rounded-pill border-0 px-3 py-2"
-                style={{
-                  background: s.fundo,
-                  color: s.cor,
-                  outline: ativo ? `2px solid ${s.cor}` : "none",
-                  opacity: filtro && !ativo ? 0.55 : 1,
-                }}
               >
                 {contar(chave)} {s.rotulo}
-              </button>
+              </Pilula>
             );
           })}
         </div>
-      </div>
+      </Topo>
 
-      {/* altura fixa + rolagem: 20 agendamentos não quebram o layout */}
-      <div style={{ maxHeight: 420, overflowY: "auto" }}>
-        {visiveis.length === 0 && (
-          <p className="text-secondary text-center py-4 mb-0">Nenhum agendamento por aqui.</p>
-        )}
+      <Lista>
+        {visiveis.length === 0 && <Vazio>Nenhum agendamento por aqui.</Vazio>}
 
         {visiveis.map((item) => (
-          <div
-            key={item.id}
-            className="d-flex align-items-center gap-3 py-3"
-            style={{ borderBottom: "1px solid var(--ps-borda)" }}
-          >
-            <div
-              className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-bold text-white"
-              style={{ width: 36, height: 36, background: "#15803d" }}
-            >
-              {item.pet.charAt(0).toUpperCase()}
+          <Linha key={item.id}>
+            <span className="icone" aria-hidden="true">
+              <PawPrint size={18} />
+            </span>
+
+            <div className="textos">
+              <strong>
+                {item.pet}
+                {item.tutor && <span className="tutor"> · {item.tutor}</span>}
+              </strong>
+              <small>{item.servico}</small>
             </div>
 
-            <div className="flex-grow-1" style={{ minWidth: 0 }}>
-              <div className="text-truncate">
-                <strong>{item.pet}</strong>
-                <span className="text-secondary"> · {item.tutor}</span>
-              </div>
-              <div className="text-secondary small text-truncate">{item.servico}</div>
+            <div className="horario">
+              <strong>{item.hora}</strong>
+              <small>{moeda(item.valor)}</small>
             </div>
 
-            <div className="text-end">
-              <div className="fw-bold">{item.hora}</div>
-              <div className="text-secondary small">{moeda(item.valor)}</div>
-            </div>
-
-            <div className="d-flex justify-content-end gap-2" style={{ width: 150 }}>
+            <div className="acoes">
               {item.status === "AGENDADO" ? (
                 <>
-                  <button type="button" className="btn btn-sm btn-outline-success py-0 px-2"
-                    onClick={() => aoConcluir(item)}>Concluir</button>
-                  <button type="button" className="btn btn-sm btn-outline-danger py-0 px-2"
-                    onClick={() => aoCancelar(item)}>Cancelar</button>
+                  <BotaoAcao type="button" $s={STATUS.CONCLUIDO} onClick={() => aoConcluir(item)}>
+                    Concluir
+                  </BotaoAcao>
+                  <BotaoAcao type="button" $s={STATUS.CANCELADO} onClick={() => aoCancelar(item)}>
+                    Cancelar
+                  </BotaoAcao>
                 </>
               ) : (
-                <span
-                  className="badge rounded-pill fw-semibold px-3 py-2"
-                  style={{
-                    background: item.status === "CONCLUIDO" ? "#dcfce7" : "#fee2e2",
-                    color: item.status === "CONCLUIDO" ? "#15803d" : "#b91c1c",
-                  }}
-                >
-                  {item.status === "CONCLUIDO" ? "Concluído" : "Cancelado"}
-                </span>
+                <Etiqueta $s={STATUS[item.status]}>{STATUS[item.status].singular}</Etiqueta>
               )}
             </div>
-          </div>
+          </Linha>
         ))}
-      </div>
-    </div>
+      </Lista>
+    </Caixa>
   );
 }

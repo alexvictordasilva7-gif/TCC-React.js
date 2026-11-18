@@ -1,120 +1,148 @@
-import { useMemo, useState } from "react";
-import { Row, Col } from "react-bootstrap";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import * as S from "./Dashboard.styles";
 import { useNavigate } from "react-router-dom";
-import { LayoutDashboard } from "lucide-react";
 import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
 import CardResumo from "../../components/Cards/CardResumo";
 import AvisoEstoque from "../../components/AlertaAviso/AvisoEstoque";
 import AgendamentosHoje from "../../components/Cards/Agendamentoshoje";
 import ModalConfirmacao from "../../components/Modal/ModalConfirmacao";
-
-// ---- DADOS DE TESTE (trocar pela API quando o back estiver pronto) ----
-const AGENDA_MOCK = [
-  {
-    id: 1,
-    pet: "Pet_4",
-    tutor: "Cliente 30",
-    servico: "Serviço de Leva e Traz",
-    hora: "19:18",
-    valor: 30,
-    status: "AGENDADO",
-  },
-  {
-    id: 2,
-    pet: "Pet_9",
-    tutor: "Cliente 17",
-    servico: "Vacinação Anual",
-    hora: "19:19",
-    valor: 120,
-    status: "AGENDADO",
-  },
-  {
-    id: 3,
-    pet: "Pet_58",
-    tutor: "Cliente 6",
-    servico: "Vacinação Anual",
-    hora: "11:39",
-    valor: 120,
-    status: "CONCLUIDO",
-  },
-];
-const CLIENTES_NOVOS_HOJE = 4;
-const PETS_NOVOS_HOJE = 6;
-const PRODUTOS_ESTOQUE_BAIXO = 3;
-// -----------------------------------------------------------------------
+import { useDados } from "../../context/DadosContext";
+import { alerta } from "../../utils/Alertas";
+import api from "../../service/api";
+import { PawPrint } from "lucide-react";
 
 const moeda = (v) =>
-  Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  Number(v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+// a lista da tela só conhece 3 situações; CONFIRMADO e EM_ANDAMENTO contam como "agendado"
+const statusDaTela = (s) => (s === "CONCLUIDO" || s === "CANCELADO" ? s : "AGENDADO");
+
+// "14:30:00" -> "14:30"
+const hora = (h) => String(h ?? "").slice(0, 5);
+
+const ehHoje = (iso) => new Date(iso).toDateString() === new Date().toDateString();
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [agenda, setAgenda] = useState(AGENDA_MOCK);
+  const { vendas } = useDados();
+  const [agenda, setAgenda] = useState([]);
+  const [resumo, setResumo] = useState(null);
+  const [vendasHoje, setVendasHoje] = useState(null); // GET /api/vendas/hoje
   const [filtro, setFiltro] = useState(null); // null = todos
   const [acao, setAcao] = useState(null); // { tipo: "concluir" | "cancelar", item }
+  const [salvando, setSalvando] = useState(false);
 
-  // serviço concluído entra na receita diária
-  const receitaHoje = useMemo(
+  // tudo do dia vem do back: agenda de hoje + resumo (estoque baixo, clientes, pets)
+  const carregar = useCallback(async () => {
+    const [ag, res, ven] = await Promise.allSettled([
+      api.get("/api/dashboard/agenda-hoje"),
+      api.get("/api/dashboard/resumo"),
+      api.get("/api/vendas/hoje"),
+    ]);
+
+    if (ag.status === "fulfilled") {
+      setAgenda(
+        (ag.value.data ?? []).map((i) => ({
+          ...i,
+          hora: hora(i.hora),
+          valor: Number(i.valor ?? 0),
+          statusOriginal: i.status,
+          status: statusDaTela(i.status),
+        })),
+      );
+    } else {
+      console.error("Erro ao carregar a agenda de hoje:", ag.reason);
+      alerta.erro("Não foi possível carregar os agendamentos de hoje.");
+    }
+
+    if (res.status === "fulfilled") setResumo(res.value.data);
+    else console.error("Erro ao carregar o resumo:", res.reason);
+
+    if (ven.status === "fulfilled") setVendasHoje(ven.value.data);
+    else console.error("Erro ao carregar as vendas de hoje:", ven.reason);
+  }, []);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  // receita do dia: serviços concluídos hoje + vendas feitas hoje
+  const receitaServicos = useMemo(
     () =>
       agenda
         .filter((i) => i.status === "CONCLUIDO")
         .reduce((s, i) => s + i.valor, 0),
     [agenda],
   );
+  // total vendido hoje vem do banco; se a rota falhar, usa o histórico do navegador
+  const receitaVendas = vendasHoje
+    ? Number(vendasHoje.totalVendido ?? 0)
+    : vendas
+        .filter((v) => ehHoje(v.dataHora))
+        .reduce((s, v) => s + Number(v.total ?? 0), 0);
+  const receitaHoje = receitaServicos + receitaVendas;
 
-  function confirmar() {
-    const novoStatus = acao.tipo === "concluir" ? "CONCLUIDO" : "CANCELADO";
-    // quando o back existir: await PUT /api/agendamentos/{id}/concluido ou /cancelar
-    setAgenda((lista) =>
-      lista.map((i) =>
-        i.id === acao.item.id ? { ...i, status: novoStatus } : i,
-      ),
-    );
-    setAcao(null);
+  // estoque baixo: lista pronta do back (sem cálculo no front)
+  const estoqueBaixo = resumo?.estoqueBaixo ?? [];
+
+  async function confirmar() {
+    const rota = acao.tipo === "concluir" ? "concluido" : "cancelar";
+    setSalvando(true);
+    try {
+      await api.put(`/api/agendamentos/${acao.item.id}/${rota}`);
+      alerta.sucesso(
+        acao.tipo === "concluir" ? "Atendimento concluído!" : "Agendamento cancelado.",
+      );
+      setAcao(null);
+      carregar(); // recarrega a agenda e a receita
+    } catch (erro) {
+      console.error("Erro ao atualizar agendamento:", erro.response?.data ?? erro);
+      const mensagens = erro.response?.data?.mensagens;
+      alerta.erro(
+        Array.isArray(mensagens) ? mensagens.join("\n") : "Não foi possível atualizar o agendamento.",
+      );
+    } finally {
+      setSalvando(false);
+    }
   }
 
   return (
-    <div className="p-4">
+    <div className="ps-tema">
       <CabecalhoPagina
-        sobre="Controle de produtos"
-        icone= {"LayoutDashboard"}
+        sobre="Visão do dia"
+        icone="speedometer2"
         titulo="Dashboard"
-        subtitulo="Resumo operacional do dia."
+        subtitulo="Resumo operacional de hoje, em tempo real."
       />
-      
 
-      <Row className="g-3 mb-3">
-        <Col md={4}>
-          <CardResumo
-            tema
-            titulo="Receita diária"
-            valor={moeda(receitaHoje)}
-            icone="currency-dollar"
-            corIcone="#2563eb"
-          />
-        </Col>
-        <Col md={4}>
-          <CardResumo
-            tema
-            titulo="Clientes novos do dia"
-            valor={CLIENTES_NOVOS_HOJE}
-            icone="people"
-            corIcone="#7c3aed"
-          />
-        </Col>
-        <Col md={4}>
-          <CardResumo
-            tema
-            titulo="Pets novos do dia"
-            valor={PETS_NOVOS_HOJE}
-            icone="heart"
-            corIcone="#16a34a"
-          />
-        </Col>
-      </Row>
+      <S.Numeros>
+        <CardResumo
+          tema
+          titulo="Receita diária"
+          valor={moeda(receitaHoje)}
+          icone="currency-dollar"
+        />
+        {/* TODO: trocar por "novos do dia" quando o /resumo devolver novoHoje */}
+        <CardResumo
+          tema
+          titulo="Clientes novos no mês"
+          valor={resumo?.clientes?.novoMes ?? "—"}
+          icone="person"
+          corIcone="#6a5cf5"
+        />
+        <CardResumo
+          tema
+          titulo="Pets novos no mês"
+          valor={resumo?.pets?.novoMes ?? "—"}
+          icone={<PawPrint size={20} />}
+          corIcone="#e8731a"
+        />
+      </S.Numeros>
 
       <AvisoEstoque
-        quantidade={PRODUTOS_ESTOQUE_BAIXO}
-        aoClicar={() => navigate("/Produtos")}
+        quantidade={estoqueBaixo.length}
+        itens={estoqueBaixo}
+        aoClicar={() => navigate("/Estoque")}
       />
 
       <AgendamentosHoje
@@ -142,6 +170,7 @@ export default function Dashboard() {
         textoConfirmar={
           acao?.tipo === "concluir" ? "Sim, concluir" : "Sim, cancelar"
         }
+        carregando={salvando}
         aoConfirmar={confirmar}
         aoFechar={() => setAcao(null)}
       />

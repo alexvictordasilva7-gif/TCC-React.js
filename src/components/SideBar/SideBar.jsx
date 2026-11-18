@@ -11,6 +11,8 @@ import {
   Wrench,
   Calendar,
   Box,
+  ShoppingCart,
+  ChartColumn,
   Truck,
   SquareArrowRightExit,
   Sun,
@@ -26,6 +28,8 @@ const paginas = [
   { nome: "Agendamentos", rota: "/Agendamentos", Icone: Calendar },
   { nome: "Fornecedores", rota: "/Fornecedor", Icone: Truck },
   { nome: "Estoque", rota: "/Estoque", Icone: Box },
+  { nome: "Vendas", rota: "/Vendas", Icone: ShoppingCart },
+  { nome: "Relatórios", rota: "/Relatorios", Icone: ChartColumn },
 ];
 
 // iniciais para o avatar: "Ryan Santana" -> "RS", "ryan@email.com" -> "R"
