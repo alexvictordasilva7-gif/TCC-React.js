@@ -1,0 +1,199 @@
+/* =====================================================================
+   TEMA — PET SHOP
+   ---------------------------------------------------------------------
+   • A paleta nova (azul → roxo) vale SÓ dentro de elementos com a
+     classe "ps-tema": a barra lateral e a tela Clientes & Pets.
+     As outras telas continuam exatamente como estão no modo claro.
+   • Modo noturno: data-bs-theme="dark" na tag <html> (botão de lua
+     na barra lateral). Aí sim o sistema inteiro escurece.
+   ===================================================================== */
+
+/* ===================== CORES — MODO CLARO ===================== */
+:root,
+[data-bs-theme="light"] {
+  --ps-primaria: #1d5bf0;
+  --ps-primaria-escura: #1442b8;
+  --ps-primaria-clara: #e8efff;
+  --ps-preenchimento: #1d5bf0;      /* fundo de botões e cards em destaque */
+  --ps-preenchimento-hover: #1442b8;
+  --ps-secundaria: #6a5cf5;
+  --ps-destaque: #e8731a;
+  --ps-destaque-clara: #fdeee0;
+
+  --ps-fundo: #f5f7fb;
+  --ps-superficie: #ffffff;
+  --ps-superficie-2: #fafbfd;
+  --ps-borda: #e4e8f0;
+  --ps-texto: #111827;
+  --ps-texto-suave: #5b6475;
+
+  --ps-degrade-menu: linear-gradient(180deg, #2f6bf2 0%, #6a4df0 100%);
+  --ps-degrade-botao: linear-gradient(135deg, #1d5bf0, #6a5cf5);
+
+  --ps-sombra: 0 1px 2px rgba(17, 24, 39, 0.04), 0 8px 24px rgba(17, 24, 39, 0.06);
+  --ps-sombra-botao: 0 8px 18px rgba(29, 91, 240, 0.25);
+  --ps-fundo-modal: rgba(17, 24, 39, 0.55);
+  --ps-anel-foco: rgba(29, 91, 240, 0.25);
+
+  --ps-fonte-titulo: "Archivo", system-ui, sans-serif;
+  --ps-fonte-texto: "Inter", system-ui, sans-serif;
+}
+
+/* ===================== CORES — MODO NOTURNO ===================== */
+[data-bs-theme="dark"] {
+  --ps-primaria: #5b8cff;
+  --ps-primaria-escura: #3f74f5;
+  --ps-primaria-clara: rgba(91, 140, 255, 0.16);
+  --ps-preenchimento: #3566e8;
+  --ps-preenchimento-hover: #2a55cc;
+  --ps-secundaria: #8b7dff;
+  --ps-destaque: #ff9d4d;
+  --ps-destaque-clara: rgba(255, 157, 77, 0.16);
+
+  --ps-fundo: #0b1020;
+  --ps-superficie: #141a2e;
+  --ps-superficie-2: #1a2138;
+  --ps-borda: #263051;
+  --ps-texto: #e7eaf3;
+  --ps-texto-suave: #9aa3b8;
+
+  --ps-degrade-menu: linear-gradient(180deg, #16245c 0%, #2e1f68 100%);
+  --ps-degrade-botao: linear-gradient(135deg, #3566e8, #6a55e6);
+
+  --ps-sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --ps-sombra-botao: 0 8px 18px rgba(53, 102, 232, 0.35);
+  --ps-fundo-modal: rgba(3, 6, 15, 0.7);
+  --ps-anel-foco: rgba(91, 140, 255, 0.35);
+
+  /* usadas pelo Layout e pelo Modal das telas antigas (só no modo noturno) */
+  --ps-layout-fundo: #0b1020;
+  --ps-layout-borda: #263051;
+  --ps-modal-fundo: #141a2e;
+
+  /* Bootstrap no modo noturno com os mesmos tons */
+  --bs-body-bg: #141a2e;
+  --bs-body-bg-rgb: 20, 26, 46;
+  --bs-body-color: #e7eaf3;
+  --bs-body-color-rgb: 231, 234, 243;
+  --bs-secondary-bg: #1a2138;
+  --bs-tertiary-bg: #182037;
+  --bs-border-color: #263051;
+}
+
+/* ===================== TELAS ANTIGAS NO MODO NOTURNO =====================
+   No modo claro nada disto vale, então as telas ficam iguais. */
+[data-bs-theme="dark"] body {
+  background-color: #0b1020;
+}
+[data-bs-theme="dark"] .bg-white {
+  background-color: #141a2e !important;
+}
+[data-bs-theme="dark"] .bg-light {
+  background-color: #1a2138 !important;
+}
+[data-bs-theme="dark"] .table {
+  --bs-table-bg: #141a2e;
+  --bs-table-border-color: #263051;
+  --bs-table-hover-bg: #1a2138;
+}
+[data-bs-theme="dark"] .table-warning {
+  --bs-table-bg: rgba(245, 166, 35, 0.14);
+  --bs-table-color: #e7eaf3;
+  --bs-table-hover-bg: rgba(245, 166, 35, 0.2);
+  --bs-table-hover-color: #e7eaf3;
+}
+[data-bs-theme="dark"] input,
+[data-bs-theme="dark"] select,
+[data-bs-theme="dark"] textarea {
+  color-scheme: dark;
+}
+/* campos das telas antigas (sem cor própria) no modo noturno */
+[data-bs-theme="dark"] :where(input:not([type="checkbox"], [type="radio"]), textarea) {
+  background-color: #1a2138;
+  color: #e7eaf3;
+  border-color: #263051;
+}
+
+/* ===================== ESCOPO "ps-tema" =====================
+   Barra lateral e Clientes & Pets. Aqui valem a paleta nova e as
+   fontes Inter/Archivo (vence o "* { font-family ... !important }"
+   do App.css só dentro destes elementos). */
+.ps-tema,
+.ps-tema * {
+  font-family: var(--ps-fonte-texto) !important;
+}
+.ps-tema h1,
+.ps-tema h2,
+.ps-tema h3,
+.ps-tema .ps-fonte-titulo {
+  font-family: var(--ps-fonte-titulo) !important;
+  letter-spacing: -0.02em;
+}
+
+.ps-tema {
+  --bs-primary: var(--ps-primaria);
+  --bs-primary-bg-subtle: var(--ps-primaria-clara);
+  --bs-link-color: var(--ps-primaria);
+  --bs-link-hover-color: var(--ps-primaria-escura);
+  --bs-focus-ring-color: var(--ps-anel-foco);
+  --bs-border-radius: 0.75rem;
+  --bs-border-radius-sm: 0.5rem;
+  --bs-border-radius-lg: 1rem;
+  color: var(--ps-texto);
+}
+:root .ps-tema,
+[data-bs-theme="light"] .ps-tema {
+  --bs-primary-rgb: 29, 91, 240;
+}
+[data-bs-theme="dark"] .ps-tema {
+  --bs-primary-rgb: 91, 140, 255;
+}
+
+.ps-tema .btn {
+  --bs-btn-font-weight: 600;
+  --bs-btn-padding-x: 1.1rem;
+  --bs-btn-padding-y: 0.55rem;
+  --bs-btn-border-radius: 999px;
+}
+.ps-tema .btn-primary {
+  --bs-btn-bg: var(--ps-preenchimento);
+  --bs-btn-border-color: var(--ps-preenchimento);
+  --bs-btn-hover-bg: var(--ps-preenchimento-hover);
+  --bs-btn-hover-border-color: var(--ps-preenchimento-hover);
+  --bs-btn-active-bg: var(--ps-preenchimento-hover);
+  --bs-btn-active-border-color: var(--ps-preenchimento-hover);
+  --bs-btn-disabled-bg: var(--ps-preenchimento);
+  --bs-btn-disabled-border-color: var(--ps-preenchimento);
+  box-shadow: var(--ps-sombra-botao);
+}
+.ps-tema .btn-outline-secondary {
+  --bs-btn-color: var(--ps-texto);
+  --bs-btn-border-color: var(--ps-borda);
+  --bs-btn-hover-color: var(--ps-texto);
+  --bs-btn-hover-bg: var(--ps-superficie-2);
+  --bs-btn-hover-border-color: var(--ps-borda);
+  --bs-btn-active-color: var(--ps-texto);
+  --bs-btn-active-bg: var(--ps-superficie-2);
+  --bs-btn-active-border-color: var(--ps-borda);
+  background-color: var(--ps-superficie);
+}
+.ps-tema .form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+.ps-tema .card {
+  --bs-card-bg: var(--ps-superficie);
+  --bs-card-border-color: var(--ps-borda);
+  --bs-card-border-radius: 1.25rem;
+  --bs-card-inner-border-radius: 1.25rem;
+}
+.ps-tema .shadow-sm {
+  box-shadow: var(--ps-sombra) !important;
+}
+
+/* ===================== TOASTS NO MODO NOTURNO ===================== */
+[data-bs-theme="dark"] .pet-sucesso { background: #13291f; color: #8fe0b2; }
+[data-bs-theme="dark"] .pet-erro    { background: #2e1517; color: #ffaaa5; }
+[data-bs-theme="dark"] .pet-aviso   { background: #2c2210; color: #ffd27a; }
+[data-bs-theme="dark"] .pet-info    { background: #122039; color: #a9c8ff; }

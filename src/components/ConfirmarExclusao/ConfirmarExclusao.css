@@ -1,0 +1,115 @@
+/* Mesmo visual do aviso de erro (.pet-toast.pet-erro): fundo rosado, faixa vermelha à esquerda,
+   cantos de 16px e sombra suave. */
+.pet-confirmar-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16px;
+  padding-top: 12vh;
+  background: rgba(15, 23, 42, 0.35);
+  animation: pet-confirmar-fundo-entra 0.16s ease-out;
+}
+
+.pet-confirmar {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding: 18px 20px 16px 20px;
+  border-radius: 16px;
+  border-left: 6px solid #e5534b;
+  background: #fdeceb;
+  color: #9b2c2c;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  animation: pet-confirmar-entra 0.2s ease-out;
+}
+
+.pet-confirmar-fundo.saindo { animation: pet-confirmar-fundo-sai 0.16s ease-in forwards; }
+.pet-confirmar-fundo.saindo .pet-confirmar { animation: pet-confirmar-sai 0.16s ease-in forwards; }
+
+.pet-confirmar__fechar {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  border: 0;
+  background: none;
+  color: #9b2c2c;
+  opacity: 0.55;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+}
+.pet-confirmar__fechar:hover { opacity: 1; }
+
+.pet-confirmar__corpo {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-right: 18px;
+}
+
+.pet-confirmar__corpo strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.pet-confirmar__corpo p {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #7f2a2a;
+}
+
+.pet-confirmar__acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.pet-confirmar__botao {
+  border-radius: 10px;
+  padding: 8px 18px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s, background 0.15s;
+}
+
+.pet-confirmar__botao--cancelar {
+  border: 1px solid #f1b8b4;
+  background: #ffffff;
+  color: #9b2c2c;
+}
+.pet-confirmar__botao--cancelar:hover { background: #fff5f4; }
+
+.pet-confirmar__botao--excluir {
+  border: 1px solid #e5534b;
+  background: #e5534b;
+  color: #ffffff;
+}
+.pet-confirmar__botao--excluir:hover { filter: brightness(0.93); }
+
+.pet-confirmar__botao:focus-visible,
+.pet-confirmar__fechar:focus-visible {
+  outline: 3px solid rgba(229, 83, 75, 0.35);
+  outline-offset: 2px;
+}
+
+@keyframes pet-confirmar-entra {
+  from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes pet-confirmar-sai {
+  to { opacity: 0; transform: translateY(-8px) scale(0.98); }
+}
+@keyframes pet-confirmar-fundo-entra { from { opacity: 0; } }
+@keyframes pet-confirmar-fundo-sai { to { opacity: 0; } }

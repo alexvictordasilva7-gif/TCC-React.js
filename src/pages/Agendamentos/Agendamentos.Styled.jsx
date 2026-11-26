@@ -2,6 +2,9 @@ import styled from "styled-components"
 import { BiTrash } from "react-icons/bi";
 import { FaRegEdit } from "react-icons/fa";
 
+export const FiltroT = styled.div`
+  margin:0;
+`
 
 export const Bcontainer = styled.div`
     display: flex;
@@ -30,12 +33,3 @@ export const Celula = styled.span`
  
 `;
 
-export const Del = styled(BiTrash)`
-color:red;
-size:16px;
-` 
-
-export const Edi = styled(FaRegEdit)`
-color:blue;
-size:16px;
-`

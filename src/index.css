@@ -1,4 +1,56 @@
-*{
-    margin: 0;
-    padding: 0;
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+
+:root {
+  --toastify-z-index: 99999; /* resolve o toast ficar atrás do modal */
+}
+
+.pet-toast {
+  border-radius: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  border-left: 6px solid;
+}
+
+.pet-toast .Toastify__toast-icon {
+  font-size: 1.6rem;
+  width: auto;
+  margin-inline-end: 12px;
+}
+
+.pet-sucesso { background: #eafaf0; color: #1e6b3a; border-color: #34b36b; }
+.pet-erro    { background: #fdeceb; color: #9b2c2c; border-color: #e5534b; }
+.pet-aviso   { background: #fff6e0; color: #8a5a00; border-color: #f5a623; }
+.pet-info    { background: #eaf3ff; color: #1d4f91; border-color: #3b82f6; }
+
+.pet-sucesso .pet-toast-progress { background: #34b36b; }
+.pet-erro    .pet-toast-progress { background: #e5534b; }
+.pet-aviso   .pet-toast-progress { background: #f5a623; }
+.pet-info    .pet-toast-progress { background: #3b82f6; }
+/* ===== remove a cor do preenchimento automático do navegador =====
+   O Chrome pinta o campo (azul/cinza) quando completa e-mail ou senha salvos.
+   A sombra interna cobre essa cor com o fundo do próprio campo, e a transição
+   longa impede o navegador de trocar a cor. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--texto, var(--ps-texto, #111827)) !important;
+  caret-color: var(--texto, var(--ps-texto, #111827));
+  -webkit-box-shadow: 0 0 0 1000px var(--fundo-autofill, var(--ps-superficie, #ffffff)) inset !important;
+  box-shadow: 0 0 0 1000px var(--fundo-autofill, var(--ps-superficie, #ffffff)) inset !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* nos campos de login e cadastro, usa o fundo da própria caixa */
+.auth-input {
+  --fundo-autofill: var(--fundo-input);
+}
+.auth-input--destaque {
+  --fundo-autofill: var(--fundo-input-destaque);
 }

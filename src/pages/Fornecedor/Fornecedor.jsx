@@ -1,31 +1,75 @@
+import { useEffect, useState } from "react";
+import { useDados } from "../../context/DadosContext";
+import { categoriasProduto } from "../../utils/opcoes";
+import api from "../../service/api";
+import { alerta } from "../../utils/Alertas";
+import { confirmarExclusao, mensagemDaApi } from "../../components/ConfirmarExclusao/ConfirmarExclusao.jsx";
 import Modal from "../../components/Modal/Modal";
+import ButtonX from "../../components/Button/ButtonX.jsx";
+import { X } from "lucide-react";
 import Input from "../../components/Input/Input";
+import Select from "../../components/Select/Select";
 import Button from "../../components/Button/Button";
 import Form from "../../components/Forms/Forms";
-import Tabela from "../../components/Tabela/Tabela";
+import Tabela from "../../components/TabelaTeste/TabelaT";
+import CardResumo from "../../components/Cards/CardResumo";
+import BarraFiltro from "../../components/Filtro/BarraFiltro";
 import * as S from "./Fornecedor.Styled";
-import { useEffect, useState } from "react";
-import api from "../../service/api";
+import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
+import CampoEndereco, {
+  enderecoVazio,
+  lerEndereco,
+  montarEndereco,
+} from "../../components/CampoEndereco/CampoEndereco.jsx";
+
+// 14 números -> 00.000.000/0000-00
+const formatarCnpj = (c) =>
+  String(c ?? "").replace(
+    /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
+    "$1.$2.$3/$4-$5",
+  );
+
+// por enquanto a categoria usa a lista do produto (só na tela)
+const rotuloCategoria = (valor) =>
+  categoriasProduto.find((c) => c.valor === valor)?.rotulo ?? valor;
+
+// o "contato" da tela é o nomeFantasia do back
+const doBack = (f) => ({ ...f, nomeContato: f.nomeFantasia });
 
 const Fornecedor = () => {
+  const { fornecedores, setFornecedores, produtos } = useDados();
+
   const [openModal, setOpenModal] = useState(false);
+  const [fornecedorEditando, setFornecedorEditando] = useState(null);
   const [razaoSocial, setRazaoSocial] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [categoria, setCategoria] = useState("");
   const [nomeContato, setNomeContato] = useState("");
+  const [endereco, setEndereco] = useState(enderecoVazio);
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
-  const [endereco, setEndereco] = useState("");
   const [status, setStatus] = useState("Ativo");
-  const [fornecedores, setFornecedores] = useState([]);
   const [busca, setBusca] = useState("");
-  const [filtro, setFiltro] = useState("Todos");
+  const [filtroAtivo, setFiltroAtivo] = useState("Todos");
 
+  // carrega os fornecedores do back ao abrir a página
   useEffect(() => {
     async function carregarFornecedores() {
       try {
-        const resposta = await api.get('/api/fornecedores');
-        setFornecedores(resposta.data.content);
+        const resposta = await api.get("/api/fornecedores?size=200");
+        const lista = resposta.data.content ?? resposta.data;
+
+        // mantém o que só existe no front (categoria e status)
+        setFornecedores((atuais) =>
+          lista.map((f) => {
+            const local = atuais.find((x) => String(x.id) === String(f.id));
+            return {
+              ...doBack(f),
+              categoria: f.categoria ?? local?.categoria,
+              status: local?.status ?? "Ativo",
+            };
+          }),
+        );
       } catch (erro) {
         console.error("Erro ao carregar fornecedores:", erro);
       }
@@ -33,278 +77,381 @@ const Fornecedor = () => {
     carregarFornecedores();
   }, []);
 
-
-  async function deletarFornecedor(id) {
-     console.log("id recebido:", id);
-  try {
-    await api.delete(`/api/fornecedores/${id}`);
-    setFornecedores(fornecedores.filter((fornecedor) => fornecedor.id !== id));
-  } catch (erro) {
-    console.error("Erro ao deletar fornecedor:", erro);
-    alert("Não foi possível deletar o fornecedor. Tente novamente.");
-  }
-}
-
-
-  // função criada para adicionar fornecedores, e essa função e ativada pelo botão cadastrar
-  async function addFornecedor() {
-    const novoFornecedor = { razaoSocial, cnpj, categoria, nomeContato, telefone, email, endereco, status };
-
-    try {
-    const resposta = await api.post('/api/fornecedores', novoFornecedor);
-    setFornecedores([...fornecedores, resposta.data]);
-
+  // ---------- modal ----------
+  function limparCampos() {
     setRazaoSocial("");
     setCnpj("");
     setCategoria("");
     setNomeContato("");
     setTelefone("");
     setEmail("");
-    setEndereco("");
+    setEndereco(enderecoVazio);
     setStatus("Ativo");
-    setOpenModal(false);
-  } catch (erro) {
-    console.error("Erro ao cadastrar fornecedor:", erro);
-    alert("Não foi possível cadastrar o fornecedor. Tente novamente.");
   }
+
+  function abrirNovo() {
+    limparCampos();
+    setFornecedorEditando(null);
+    setOpenModal(true);
+  }
+
+  function abrirEditar(f) {
+    setRazaoSocial(f.razaoSocial ?? "");
+    setCnpj(f.cnpj ?? "");
+    setCategoria(f.categoria ?? "");
+    setNomeContato(f.nomeContato ?? "");
+    setTelefone(f.telefone ?? "");
+    setEmail(f.email ?? "");
+    setEndereco(lerEndereco(f.endereco));
+    setStatus(f.status ?? "Ativo");
+    setFornecedorEditando(f);
+    setOpenModal(true);
+  }
+
+  function fecharModal() {
+    limparCampos();
+    setFornecedorEditando(null);
+    setOpenModal(false);
+  }
+
+  // ---------- salvar e excluir ----------
+  async function salvarFornecedor() {
+    const cnpjLimpo = cnpj.replace(/\D/g, "");
+
+    if (!razaoSocial || !categoria) return;
+    if (cnpjLimpo.length !== 14) {
+      alerta.aviso("O CNPJ deve ter 14 números.");
+      return;
     }
 
+    const dadosBack = {
+      razaoSocial,
+      cnpj: cnpjLimpo,
+      nomeFantasia: nomeContato || null,
+      categoria, 
+      telefone: telefone || null,
+      email: email || null,
+      // TODO back: o Fornecedor ainda não tem "cep" nem "endereco".
+      // Hoje o back ignora estes dois; passam a ser salvos quando os campos existirem.
+      cep: endereco.cep.replace(/\D/g, "") || null,
+      endereco: montarEndereco(endereco) || null,
+    };
 
-  const totalFornecedores = fornecedores.length;
-  const ativos = fornecedores.filter((f) => f.status === "Ativo").length;
-  const inativos = fornecedores.filter((f) => f.status === "Inativo").length;
+    // o que só existe no front
+    const soFront = { categoria, status, endereco: dadosBack.endereco };
 
-  const fornecedoresFiltrados = fornecedores
-    .filter((f) => (filtro === "Todos" ? true : f.status === filtro))
-    .filter((f) => {
-      const texto = busca.toLowerCase();
-      return (
-        f.razaoSocial?.toLowerCase().includes(texto) ||
-        f.nomeContato?.toLowerCase().includes(texto) ||
-        f.categoria?.toLowerCase().includes(texto)
+    try {
+      if (fornecedorEditando) {
+        const resposta = await api.put(
+          `/api/fornecedores/${fornecedorEditando.id}`,
+          dadosBack,
+        );
+        setFornecedores(
+          fornecedores.map((f) =>
+            f.id === fornecedorEditando.id
+              ? { ...f, ...doBack(resposta.data), ...soFront }
+              : f,
+          ),
+        );
+      } else {
+        const resposta = await api.post("/api/fornecedores", dadosBack);
+        setFornecedores([
+          ...fornecedores,
+          { ...doBack(resposta.data), ...soFront },
+        ]);
+      }
+      fecharModal();
+    } catch (erro) {
+      console.log(erro.response?.data);
+      alerta.erro(mensagemDaApi(erro, "Não foi possível salvar o fornecedor."));
+    }
+  }
+
+  async function deletarFornecedor(id) {
+    if (produtos.some((p) => String(p.fornecedorId) === String(id))) {
+      alerta.aviso(
+        "Este fornecedor tem produtos no estoque. Exclua ou troque o fornecedor deles primeiro.",
       );
+      return;
+    }
+    const fornecedor = fornecedores.find((f) => f.id === id);
+    const confirmar = await confirmarExclusao({
+      titulo: "Excluir fornecedor?",
+      mensagem: fornecedor
+        ? `"${fornecedor.nomeContato || fornecedor.razaoSocial}" será removido e não poderá ser recuperado.`
+        : "Este fornecedor será removido e não poderá ser recuperado.",
     });
+    if (!confirmar) return;
+    try {
+      await api.delete(`/api/fornecedores/${id}`);
+      setFornecedores((atuais) => atuais.filter((f) => f.id !== id));
+      alerta.sucesso("Fornecedor excluído.");
+    } catch (erro) {
+      console.log(erro.response?.data);
+      alerta.erro(
+        mensagemDaApi(erro, "Não foi possível excluir o fornecedor. Verifique se ele tem produtos cadastrados."),
+      );
+    }
+  }
 
+  // ---------- filtros ----------
+  const contar = (s) => fornecedores.filter((f) => f.status === s).length;
+
+  const filtros = [
+    { chave: "Todos", rotulo: "Todos", quantidade: fornecedores.length },
+    { chave: "Ativo", rotulo: "Ativos", quantidade: contar("Ativo") },
+    { chave: "Inativo", rotulo: "Inativos", quantidade: contar("Inativo") },
+  ];
+
+  const visiveis = fornecedores.filter((f) => {
+    const passaFiltro = filtroAtivo === "Todos" || f.status === filtroAtivo;
+    const texto = busca.toLowerCase();
+    const passaBusca = [
+      f.razaoSocial,
+      f.nomeContato,
+      f.endereco, // dá para buscar por rua, bairro, cidade ou CEP
+      rotuloCategoria(f.categoria),
+    ].some((campo) => (campo ?? "").toLowerCase().includes(texto));
+    return passaFiltro && passaBusca;
+  });
+
+  // ---------- colunas ----------
+  const camposFornecedores = [
+    {
+      chave: "razaoSocial",
+      rotulo: "Fornecedor",
+      render: (f) => (
+        <div>
+          <div className="fw-semibold">{f.razaoSocial}</div>
+          <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
+            {f.email}
+          </div>
+        </div>
+      ),
+    },
+    {
+      chave: "categoria",
+      rotulo: "Categoria",
+      render: (f) =>
+        f.categoria && (
+          <span className="badge bg-primary-subtle text-primary">
+            {rotuloCategoria(f.categoria)}
+          </span>
+        ),
+    },
+    {
+      chave: "contato",
+      rotulo: "Contato",
+      render: (f) => (
+        <div>
+          <div>{f.nomeContato}</div>
+          <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
+            {f.telefone}
+          </div>
+        </div>
+      ),
+    },
+    {
+      chave: "endereco",
+      rotulo: "Endereço",
+      // mesmo padrão do card de tutor em Clientes & Pets: ícone de local + texto
+      render: (f) =>
+        f.endereco ? (
+          <span
+            className="d-inline-block text-center text-secondary"
+            style={{ fontSize: "0.8rem", maxWidth: 260, whiteSpace: "normal" }}
+          >
+            <i className="bi bi-geo-alt text-primary me-1" aria-hidden="true"></i>
+            {/* hífen que não quebra: o CEP fica inteiro na mesma linha */}
+            {f.endereco.replace(/(\d{5})-(\d{3})/, "$1\u2011$2")}
+          </span>
+        ) : (
+          <span className="text-secondary">—</span>
+        ),
+    },
+    { chave: "cnpj", rotulo: "CNPJ", render: (f) => formatarCnpj(f.cnpj) },
+    {
+      chave: "status",
+      rotulo: "Status",
+      render: (f) => (
+        <span className="d-inline-flex align-items-center gap-2">
+          <span
+            className="rounded-circle d-inline-block"
+            style={{
+              width: 8,
+              height: 8,
+              backgroundColor: f.status === "Ativo" ? "#16a34a" : "#9ca3af",
+            }}
+          />
+          {f.status}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <div>
-      <S.Hfornecedor>
-        <div>
-          <h1>Fornecedores</h1>
-          <p>{totalFornecedores} fornecedores cadastrados</p>
-        </div>
-
-        <Button
-          $cor={"blue"}
-          filho={"+ Novo Fornecedor"}
-          onClick={() => setOpenModal(true)}
-          atamanho={'50px'}
-          ltamanho={'170px'}
-          fsize={'18px'}
-        />
-      </S.Hfornecedor>
-
-      <S.StatsRow>
-        <S.StatCard>
-          <S.StatIconWrap $bg="#e0edff" $cor="#2563eb">
-            <S.IconFornecedorTotal />
-          </S.StatIconWrap>
-          <div>
-            <strong>{totalFornecedores}</strong>
-            <span>Total</span>
-          </div>
-        </S.StatCard>
-
-        <S.StatCard>
-          <S.StatIconWrap $bg="#dcfce7" $cor="#16a34a">
-            <S.IconAtivo />
-          </S.StatIconWrap>
-          <div>
-            <strong>{ativos}</strong>
-            <span>Ativos</span>
-          </div>
-        </S.StatCard>
-
-        <S.StatCard>
-          <S.StatIconWrap $bg="#f1f1f1" $cor="#6b7280">
-            <S.IconInativo />
-          </S.StatIconWrap>
-          <div>
-            <strong>{inativos}</strong>
-            <span>Inativos</span>
-          </div>
-        </S.StatCard>
-      </S.StatsRow>
-
-      <S.FiltrosRow>
-        <S.BuscaWrapper>
-          <S.IconBusca />
-          <input
-            placeholder="Buscar fornecedor, contato, categoria..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
+      <CabecalhoPagina
+        sobre="Parceiros"
+        icone="truck"
+        titulo="Fornecedores"
+        subtitulo={`${fornecedores.length} ${fornecedores.length === 1 ? "fornecedor cadastrado" : "fornecedores cadastrados"}`}
+        acao={
+          <Button
+            className="btn-primary"
+            texto={<><i className="bi bi-plus-lg me-1"></i> Novo Fornecedor</>}
+            onClick={abrirNovo}
           />
-        </S.BuscaWrapper>
+        }
+      />
 
-        <S.Tabs>
-          <S.Tab $ativo={filtro === "Todos"} onClick={() => setFiltro("Todos")}>
-            Todos
-          </S.Tab>
-          <S.Tab $ativo={filtro === "Ativo"} onClick={() => setFiltro("Ativo")}>
-            Ativos ({ativos})
-          </S.Tab>
-          <S.Tab $ativo={filtro === "Inativo"} onClick={() => setFiltro("Inativo")}>
-            Inativos ({inativos})
-          </S.Tab>
-        </S.Tabs>
-      </S.FiltrosRow>
+      <div className="row g-3 mb-3">
+        <div className="col-md-4">
+          <CardResumo
+            titulo="Total"
+            valor={fornecedores.length}
+            icone="building"
+            corIcone="#2563eb"
+            fundoIcone="#e0edff"
+          />
+        </div>
+        <div className="col-md-4">
+          <CardResumo
+            titulo="Ativos"
+            valor={contar("Ativo")}
+            icone="building"
+            corIcone="#16a34a"
+            fundoIcone="#dcfce7"
+          />
+        </div>
+        <div className="col-md-4">
+          <CardResumo
+            titulo="Inativos"
+            valor={contar("Inativo")}
+            icone="building"
+            corIcone="#6b7280"
+            fundoIcone="#f1f1f1"
+          />
+        </div>
+      </div>
 
-      <S.TabelaWrapper>
-        <Tabela
-          colunas={["Fornecedor", "Categoria", "Contato", "CNPJ", "Status", "Acões"]}
-          dados={fornecedoresFiltrados}
-          renderLinha={(fornecedor, index) => (
-            <>
-              <S.Celula key={`Nome-${index}`}>
-                <S.NomeFornecedor>
-                  <strong>{fornecedor.razaoSocial}</strong>
-                  <small>{fornecedor.email}</small>
-                </S.NomeFornecedor>
-              </S.Celula>
-              <S.Celula key={`Categoria-${index}`}>
-                <S.Categoria>{fornecedor.categoria}</S.Categoria>
-              </S.Celula>
-              <S.Celula key={`Contato-${index}`}>
-                <S.Contato>
-                  <span>{fornecedor.nomeContato}</span>
-                  <span>{fornecedor.telefone}</span>
-                </S.Contato>
-              </S.Celula>
-              <S.Celula key={`Cnpj-${index}`}>{fornecedor.cnpj}</S.Celula>
-              <S.Celula key={`Status-${index}`}>
-                <S.StatusWrapper>
-                  <S.Bolinha $ativo={fornecedor.status === "Ativo"} />
-                  {fornecedor.status}
-                </S.StatusWrapper>
-              </S.Celula>
-              <S.Celula key={`Acões-${index}`}>
-                <div>
-                  <Button $cor={"transparent"} filho={<S.Edi />} />
-                  <Button onClick={()=> deletarFornecedor(fornecedor.id)} $cor={"transparent"} filho={<S.Del />} />
-                </div>
-              </S.Celula>
-            </>
-          )}
-        />
-      </S.TabelaWrapper>
+      <BarraFiltro
+        busca={busca}
+        aoBuscar={setBusca}
+        placeholder="Buscar fornecedor, contato, categoria ou endereço..."
+        filtros={filtros}
+        filtroAtivo={filtroAtivo}
+        aoMudarFiltro={setFiltroAtivo}
+      />
 
-      <div>
-        <Modal isOpen={openModal}>
-          <Form
-            // props do formulario
-            hForm={
-              <Button
-                //props do botao de sair
-                $tcor={"#fff"}
-                filho={"X"}
-                $cor={"#ff0000"}
-                onClick={() => setOpenModal(false)}
+      <Tabela
+        campos={camposFornecedores}
+        dados={visiveis}
+        aoEditar={abrirEditar}
+        aoExcluir={deletarFornecedor}
+      />
+
+      <Modal largura={860} isOpen={openModal}>
+        <Form
+          hForm={<ButtonX texto={<X size={16} />} onClick={fecharModal} />}
+          tForm={fornecedorEditando ? "Editar fornecedor" : "Novo fornecedor"}
+        >
+          <div className="row g-3">
+            <div className="col-md-8">
+              <Input
+                onChange={(e) => setRazaoSocial(e.target.value)}
+                valor={razaoSocial}
+                texto="Razão Social / Nome"
+                type="text"
               />
-            }
-            tForm={"Novo Fornecedor"}
-          >
-            <Input
-              onChange={(e) => setRazaoSocial(e.target.value)}
-              valor={razaoSocial}
-              texto={"Razão Social / Nome"}
-              type="text"
-            />
-
-            <S.LinhaForm>
+            </div>
+            <div className="col-md-4">
               <Input
                 onChange={(e) => setCnpj(e.target.value)}
                 valor={cnpj}
-                texto={"CNPJ"}
+                texto="CNPJ"
                 type="text"
               />
+            </div>
+
+            <div className="col-md-4">
               <Input
-                onChange={(e) => setCategoria(e.target.value)}
-                valor={categoria}
-                texto={"Categoria"}
+                onChange={(e) => setNomeContato(e.target.value)}
+                valor={nomeContato}
+                texto="Nome do Contato"
                 type="text"
               />
-            </S.LinhaForm>
-
-            <Input
-              onChange={(e) => setNomeContato(e.target.value)}
-              valor={nomeContato}
-              texto={"Nome do Contato"}
-              type="text"
-            />
-
-            <S.LinhaForm>
+            </div>
+            <div className="col-md-4">
               <Input
                 onChange={(e) => setTelefone(e.target.value)}
                 valor={telefone}
-                texto={"Telefone"}
+                texto="Telefone"
                 type="text"
               />
+            </div>
+            <div className="col-md-4">
               <Input
                 onChange={(e) => setEmail(e.target.value)}
                 valor={email}
-                texto={"Email"}
+                texto="Email"
                 type="text"
               />
-            </S.LinhaForm>
+            </div>
 
-            <Input
-              onChange={(e) => setEndereco(e.target.value)}
-              valor={endereco}
-              texto={"Endereço"}
-              type="text"
-            />
+            <div className="col-12">
+              <label className="form-label fw-semibold mb-0">Endereço</label>
+            </div>
+            <div className="col-12">
+              <CampoEndereco valor={endereco} onChange={setEndereco} />
+            </div>
 
-            <label>Status</label>
-            <S.RadioGroup>
-              <label>
-                <input
-                  type="radio"
-                  name="status"
-                  value="Ativo"
-                  checked={status === "Ativo"}
-                  onChange={(e) => setStatus(e.target.value)}
-                />
-                Ativo
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="status"
-                  value="Inativo"
-                  checked={status === "Inativo"}
-                  onChange={(e) => setStatus(e.target.value)}
-                />
-                Inativo
-              </label>
-            </S.RadioGroup>
-
-            <div>
-              <Button
-                onClick={() => setOpenModal(false)}
-                filho={"Cancelar"}
-                $cor={"transparent"}
-                type={"button"}
-              />
-              <Button
-                onClick={addFornecedor}
-                filho={"Cadastrar"}
-                cor={"#0044c2"}
-                type={"button"}
+            <div className="col-md-6">
+              <Select
+                texto="Categoria"
+                valor={categoria}
+                onChange={(e) => setCategoria(e.target.value)}
+                opcoes={categoriasProduto}
+                placeholder="Escolha a categoria"
               />
             </div>
-          </Form>
-        </Modal>
-      </div>
+            <div className="col-md-6">
+              <label className="form-label">Status</label>
+              <div className="d-flex gap-4 align-items-center" style={{ height: 40 }}>
+                {["Ativo", "Inativo"].map((opcao) => (
+                  <div className="form-check mb-0" key={opcao}>
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="status"
+                      id={`status-${opcao}`}
+                      value={opcao}
+                      checked={status === opcao}
+                      onChange={(e) => setStatus(e.target.value)}
+                    />
+                    <label className="form-check-label" htmlFor={`status-${opcao}`}>
+                      {opcao}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-end gap-2 pt-3 mt-2 border-top">
+            <Button
+              className="btn-outline-secondary px-4"
+              onClick={fecharModal}
+              texto="Cancelar"
+            />
+            <Button
+              className="btn-primary px-4"
+              onClick={salvarFornecedor}
+              texto={fornecedorEditando ? "Salvar alterações" : "Cadastrar fornecedor"}
+            />
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 };

@@ -16,3 +16,6 @@ function Tabela({ colunas, dados, renderLinha }) {
 }
 
 export default Tabela;
+
+//===================================================================================
+
