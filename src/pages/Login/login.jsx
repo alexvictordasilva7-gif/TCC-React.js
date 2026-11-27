@@ -243,7 +243,7 @@ export default function Login() {
                 />
                 Lembrar-me
               </label>
-              <a href="#" className="auth-link">Esqueceu a senha?</a>
+              <Link to="/esqueci-senha" className="auth-link">Esqueceu a senha?</Link>
             </div>
 
             {erro && <div className="auth-alerta" role="alert">{erro}</div>}
@@ -261,4 +261,4 @@ export default function Login() {
       </div>
     </div>
   );
-}
+}

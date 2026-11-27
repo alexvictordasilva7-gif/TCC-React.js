@@ -30,9 +30,11 @@ export function TemaProvider({ children }) {
   }, [tema]);
 
   const alternarTema = () => setTema((atual) => (atual === "escuro" ? "claro" : "escuro"));
+  // usado para aplicar o tema salvo no perfil (back-end)
+  const definirEscuro = (ligado) => setTema(ligado ? "escuro" : "claro");
 
   return (
-    <TemaContext.Provider value={{ tema, escuro: tema === "escuro", alternarTema }}>
+    <TemaContext.Provider value={{ tema, escuro: tema === "escuro", alternarTema, definirEscuro }}>
       {children}
     </TemaContext.Provider>
   );

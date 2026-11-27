@@ -13,6 +13,7 @@ import { useDados } from "../../context/DadosContext";
 import { alerta } from "../../utils/Alertas";
 import { normalizarPet, lista, mensagemDeErro } from "../../utils/normalizar";
 import api from "../../service/api";
+import { confirmarExclusao } from "../../components/ConfirmarExclusao/ConfirmarExclusao.jsx";
 import CampoEndereco, {
   enderecoVazio,
   lerEndereco,
@@ -251,10 +252,13 @@ export default function ClientesPets() {
 
   /* ---------- excluir tutor (igual à tela antiga de Clientes) ---------- */
   async function excluirTutor(t) {
-    const aviso = t.pets.length
-      ? `Excluir ${t.nome}? Os ${t.pets.length} pet(s) vinculados também deixam de aparecer.`
-      : `Excluir ${t.nome}?`;
-    if (!window.confirm(aviso)) return;
+    const confirmar = await confirmarExclusao({
+      titulo: `Excluir ${t.nome}?`,
+      mensagem: t.pets.length
+        ? `O cliente e os ${t.pets.length} pet(s) vinculados deixam de aparecer no sistema.`
+        : "O cliente será removido e não poderá ser recuperado.",
+    });
+    if (!confirmar) return;
 
     try {
       await api.delete(`/api/tutores/${t.id}`);

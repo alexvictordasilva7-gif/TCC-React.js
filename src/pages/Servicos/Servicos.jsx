@@ -13,6 +13,7 @@ import * as S from "./Servicos.Styled";
 import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
 import { useEffect, useState } from "react";
 import api from "../../service/api";
+import { confirmarExclusao, mensagemDaApi } from "../../components/ConfirmarExclusao/ConfirmarExclusao.jsx";
 
 // Aviso de erro exibido embaixo dos campos (usado nos Selects, que ainda não têm a prop "erro")
 const MsgErro = ({ children }) =>
@@ -172,6 +173,15 @@ const Servicos = () => {
 
   // Exclui um serviço
   async function deletarServico(id) {
+    const servico = servicos.find((s) => s.id === id);
+    const confirmar = await confirmarExclusao({
+      titulo: "Excluir serviço?",
+      mensagem: servico
+        ? `"${servico.nome}" será removido do catálogo e não poderá ser recuperado.`
+        : "Este serviço será removido do catálogo e não poderá ser recuperado.",
+    });
+    if (!confirmar) return;
+
     try {
       await api.delete(`/api/servicos/${id}`);
 
@@ -179,7 +189,7 @@ const Servicos = () => {
       alerta.sucesso("Serviço excluído.");
     } catch (erro) {
       console.error("Erro ao excluir serviço:", erro.response?.data ?? erro);
-      alerta.erro("Não foi possível excluir o serviço.");
+      alerta.erro(mensagemDaApi(erro, "Não foi possível excluir o serviço."));
     }
   }
 
@@ -305,4 +315,4 @@ const Servicos = () => {
   );
 };
 
-export default Servicos;
+export default Servicos;

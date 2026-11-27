@@ -26,9 +26,9 @@ export const LogoContainer = styled.div`
   align-items: center;
   justify-content: ${({ $recolhida }) => ($recolhida ? "center" : "flex-start")};
   gap: 12px;
-  padding: 22px ${({ $recolhida }) => ($recolhida ? "0" : "18px")};
+  padding: ${({ $recolhida }) => ($recolhida ? "16px 0" : "22px 18px")};
   border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-  min-height: 88px;
+  min-height: ${({ $recolhida }) => ($recolhida ? "76px" : "88px")};
 `;
 
 export const Icon = styled.button`
@@ -103,10 +103,25 @@ export const SideBardiv = styled.nav`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: ${({ $recolhida }) => ($recolhida ? "18px 12px" : "4px 12px")};
+  padding: ${({ $recolhida }) => ($recolhida ? "10px 12px" : "4px 12px")};
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+
+  /* sem barra de rolagem visível (continua rolando com a roda do mouse) */
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* esmaecido nas bordas só quando há itens escondidos */
+  ${({ $sombraTopo, $sombraBase }) => {
+    if (!$sombraTopo && !$sombraBase) return "";
+    const topo = $sombraTopo ? "transparent 0, #000 28px" : "#000 0";
+    const base = $sombraBase ? "#000 calc(100% - 28px), transparent 100%" : "#000 100%";
+    const mascara = `linear-gradient(to bottom, ${topo}, ${base})`;
+    return `-webkit-mask-image: ${mascara}; mask-image: ${mascara};`;
+  }}
 `;
 
 export const Nlink = styled(NavLink)`
@@ -115,7 +130,7 @@ export const Nlink = styled(NavLink)`
   gap: 12px;
   align-items: center;
   justify-content: ${({ $recolhida }) => ($recolhida ? "center" : "flex-start")};
-  min-height: 46px;
+  min-height: ${({ $recolhida }) => ($recolhida ? "40px" : "46px")};
   padding: 0 ${({ $recolhida }) => ($recolhida ? "0" : "14px")};
   border-radius: 14px;
   color: rgba(255, 255, 255, 0.86);
@@ -156,7 +171,7 @@ export const Rodape = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 14px 12px 16px;
+  padding: 10px 12px 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.14);
 `;
 
@@ -164,8 +179,8 @@ export const ProfileContainer = styled.div`
   display: flex;
   flex-direction: ${({ $recolhida }) => ($recolhida ? "column" : "row")};
   align-items: center;
-  gap: ${({ $recolhida }) => ($recolhida ? "8px" : "6px")};
-  padding: ${({ $recolhida }) => ($recolhida ? "12px 6px" : "10px 8px 10px 10px")};
+  gap: ${({ $recolhida }) => ($recolhida ? "4px" : "2px")};
+  padding: ${({ $recolhida }) => ($recolhida ? "8px 6px" : "10px 6px 10px 8px")};
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.12);
 `;
@@ -209,8 +224,8 @@ export const ProfileInfo = styled.div`
 
 export const BotaoSair = styled.button`
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: 10px;
   background: transparent;
@@ -228,3 +243,61 @@ export const BotaoSair = styled.button`
     outline-offset: 2px;
   }
 `;
+
+/* avatar + nome levam para a tela Meu perfil */
+export const LinkPerfil = styled(NavLink)`
+  display: flex;
+  flex-direction: ${({ $recolhida }) => ($recolhida ? "column" : "row")};
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 2px;
+  border-radius: 14px;
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s ease;
+
+  &:hover,
+  &.active {
+    color: inherit;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ffd36b;
+    outline-offset: 2px;
+  }
+`;
+
+/* nome e e-mail no rodapé (só exibição) */
+export const UsuarioRodape = styled.div`
+  display: flex;
+  flex-direction: ${({ $recolhida }) => ($recolhida ? "column" : "row")};
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 2px;
+`;
+
+/* ícone de perfil no rodapé: leva para /Perfil */
+export const BotaoPerfil = styled(NavLink)`
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+
+  &:hover,
+  &.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+`;
+
+

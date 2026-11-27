@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useDados } from "../../context/DadosContext";
 import { categoriasProduto } from "../../utils/opcoes";
 import api from "../../service/api";
+import { alerta } from "../../utils/Alertas";
+import { confirmarExclusao, mensagemDaApi } from "../../components/ConfirmarExclusao/ConfirmarExclusao.jsx";
 import Modal from "../../components/Modal/Modal";
 import ButtonX from "../../components/Button/ButtonX.jsx";
 import { X } from "lucide-react";
@@ -118,7 +120,7 @@ const Fornecedor = () => {
 
     if (!razaoSocial || !categoria) return;
     if (cnpjLimpo.length !== 14) {
-      alert("O CNPJ deve ter 14 números.");
+      alerta.aviso("O CNPJ deve ter 14 números.");
       return;
     }
 
@@ -161,27 +163,33 @@ const Fornecedor = () => {
       fecharModal();
     } catch (erro) {
       console.log(erro.response?.data);
-      alert(
-        erro.response?.data?.mensagens?.join("\n") ??
-          "Não foi possível salvar o fornecedor.",
-      );
+      alerta.erro(mensagemDaApi(erro, "Não foi possível salvar o fornecedor."));
     }
   }
 
   async function deletarFornecedor(id) {
     if (produtos.some((p) => String(p.fornecedorId) === String(id))) {
-      alert(
+      alerta.aviso(
         "Este fornecedor tem produtos no estoque. Exclua ou troque o fornecedor deles primeiro.",
       );
       return;
     }
+    const fornecedor = fornecedores.find((f) => f.id === id);
+    const confirmar = await confirmarExclusao({
+      titulo: "Excluir fornecedor?",
+      mensagem: fornecedor
+        ? `"${fornecedor.nomeContato || fornecedor.razaoSocial}" será removido e não poderá ser recuperado.`
+        : "Este fornecedor será removido e não poderá ser recuperado.",
+    });
+    if (!confirmar) return;
     try {
       await api.delete(`/api/fornecedores/${id}`);
-      setFornecedores(fornecedores.filter((f) => f.id !== id));
+      setFornecedores((atuais) => atuais.filter((f) => f.id !== id));
+      alerta.sucesso("Fornecedor excluído.");
     } catch (erro) {
       console.log(erro.response?.data);
-      alert(
-        "Não foi possível excluir o fornecedor. Verifique se ele tem produtos cadastrados.",
+      alerta.erro(
+        mensagemDaApi(erro, "Não foi possível excluir o fornecedor. Verifique se ele tem produtos cadastrados."),
       );
     }
   }

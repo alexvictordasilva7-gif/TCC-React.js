@@ -111,7 +111,7 @@ export default function Cadastro() {
     if (!form.nome || !form.email || !form.senha || !form.confirmar)
       return "Preencha todos os campos.";
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return "Digite um e-mail válido.";
-    if (form.senha.length < 6) return "A senha precisa ter pelo menos 6 caracteres.";
+    if (form.senha.length < 8) return "A senha precisa ter pelo menos 8 caracteres.";
     if (form.senha !== form.confirmar) return "As senhas não são iguais.";
     return "";
   }
@@ -242,7 +242,7 @@ export default function Cadastro() {
                 <input
                   id="cad-senha"
                   type={mostrarSenha ? "text" : "password"}
-                  placeholder="Mínimo de 6 caracteres"
+                  placeholder="Mínimo de 8 caracteres"
                   autoComplete="new-password"
                   value={form.senha}
                   onChange={atualizar("senha")}
@@ -291,4 +291,4 @@ export default function Cadastro() {
       </div>
     </div>
   );
-}
+}

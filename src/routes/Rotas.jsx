@@ -11,6 +11,8 @@ import Fornecedor from "../pages/Fornecedor/Fornecedor.jsx";
 import Agendamentos from "../pages/Agendamentos/Agendamentos.jsx";
 import Vendas from "../pages/Vendas/Vendas.jsx";
 import Relatorios from "../pages/Relatorios/Relatorios.jsx";
+import Perfil from "../pages/Perfil/Perfil.jsx";
+import { EsqueciSenha, RedefinirSenha } from "../pages/Login/RecuperarSenha.jsx";
 
 function Rotas() {
   return (
@@ -19,6 +21,9 @@ function Rotas() {
         <Route path="/" element={<Navigate to="/Login" replace />} />
         <Route path="/Login" element={<Login />} />
         <Route path="/Cadastro" element={<Cadastro />} />
+        {/* recuperação de senha: abertas, sem login */}
+        <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+        <Route path="/redefinir-senha" element={<RedefinirSenha />} />
       </Route>
       <Route element={<ProtectRotas />}>
         <Route element={<Layout />}>
@@ -33,6 +38,9 @@ function Rotas() {
           <Route path="/Agendamentos" element={<Agendamentos />} />
           <Route path="/Vendas" element={<Vendas />} />
           <Route path="/Relatorios" element={<Relatorios />} />
+          {/* o histórico agora fica dentro de Relatórios */}
+          <Route path="/Historico" element={<Navigate to="/Relatorios" replace />} />
+          <Route path="/Perfil" element={<Perfil />} />
         </Route>
       </Route>
     </Routes>

@@ -12,6 +12,8 @@ import * as S from "./Agendamentos.Styled";
 import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
 import { useEffect, useState } from "react";
 import api from "../../service/api";
+import { alerta } from "../../utils/Alertas";
+import { confirmarExclusao, mensagemDaApi } from "../../components/ConfirmarExclusao/ConfirmarExclusao.jsx";
 
 const Agendamentos = () => {
   const [openModal, setOpenModal] = useState(false);
@@ -95,7 +97,7 @@ const Agendamentos = () => {
     );
 
     if (!petEncontrado || !servicoEncontrado) {
-      alert("Não foi possível localizar o pet ou o serviço deste agendamento.");
+      alerta.erro("Não foi possível localizar o pet ou o serviço deste agendamento.");
       return;
     }
 
@@ -138,7 +140,7 @@ const Agendamentos = () => {
 
   async function addAgendamento() {
     if (!petId || servicosIds.length === 0 || !data || !horario) {
-      alert("Preencha todos os campos obrigatórios.");
+      alerta.aviso("Preencha todos os campos obrigatórios.");
       return;
     }
 
@@ -167,17 +169,18 @@ const Agendamentos = () => {
     } catch (erro) {
       console.error("Erro ao cadastrar agendamento:", erro);
 
-      alert(
-        erro.response?.data?.message ??
-          "Não foi possível cadastrar o agendamento.",
-      );
+      alerta.erro(mensagemDaApi(erro, "Não foi possível cadastrar o agendamento."));
     }
   }
 
   async function excluirAgendamento(id) {
-    const confirmar = window.confirm(
-      "Tem certeza que deseja excluir este agendamento?",
-    );
+    const ag = agendamentos.find((a) => a.id === id);
+    const confirmar = await confirmarExclusao({
+      titulo: "Excluir agendamento?",
+      mensagem: ag?.pet
+        ? `O agendamento de ${ag.pet} será removido e não poderá ser recuperado.`
+        : "Este agendamento será removido e não poderá ser recuperado.",
+    });
 
     if (!confirmar) return;
 
@@ -186,20 +189,20 @@ const Agendamentos = () => {
 
       setAgendamentos((atuais) => atuais.filter((a) => a.id !== id));
 
-      alert("Agendamento excluído com sucesso!");
+      alerta.sucesso("Agendamento excluído.");
     } catch (erro) {
       console.error(
         "Erro ao excluir agendamento:",
         erro.response?.data ?? erro,
       );
 
-      alert("Não foi possível excluir o agendamento.");
+      alerta.erro(mensagemDaApi(erro, "Não foi possível excluir o agendamento."));
     }
   }
 
   async function editarAgendamento() {
     if (!editandoId || !petId || !servicosIds.length || !data || !horario) {
-      alert("Preencha todos os campos obrigatórios.");
+      alerta.aviso("Preencha todos os campos obrigatórios.");
       return;
     }
 
@@ -242,17 +245,14 @@ const Agendamentos = () => {
       
       setOpenModal(false);
 
-      alert("Agendamento alterado com sucesso!");
+      alerta.sucesso("Agendamento alterado.");
     } catch (erro) {
       console.error(
         "Erro ao alterar agendamento:",
         erro.response?.data ?? erro,
       );
 
-      alert(
-        erro.response?.data?.message ??
-          "Não foi possível alterar o agendamento.",
-      );
+      alerta.erro(mensagemDaApi(erro, "Não foi possível alterar o agendamento."));
     }
   }
   // marcar ou desmarcar um serviço
@@ -295,7 +295,7 @@ const Agendamentos = () => {
       } else if (status === "CONCLUIDO") {
         resposta = await api.put(`/api/agendamentos/${id}/concluido`);
       } else {
-        alert("Não é possível voltar o agendamento para esse status.");
+        alerta.aviso("Não é possível voltar o agendamento para esse status.");
         return;
       }
 
@@ -306,7 +306,7 @@ const Agendamentos = () => {
       );
     } catch (erro) {
       console.error("Erro ao mudar status:", erro.response?.data ?? erro);
-      alert("Não foi possível alterar o status no servidor.");
+      alerta.erro(mensagemDaApi(erro, "Não foi possível alterar o status no servidor."));
     }
   }
 

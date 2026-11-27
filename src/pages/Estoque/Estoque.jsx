@@ -7,6 +7,7 @@ import { useDados } from "../../context/DadosContext";
 import { categoriasProduto } from "../../utils/opcoes";
 import { alerta } from "../../utils/Alertas";
 import api from "../../service/api";
+import { confirmarExclusao, mensagemDaApi } from "../../components/ConfirmarExclusao/ConfirmarExclusao.jsx";
 import CardResumo from "../../components/Cards/CardResumo.jsx";
 import AlertaAviso from "../../components/AlertaAviso/AlertaAviso.jsx";
 import Button from "../../components/Button/Button.jsx";
@@ -419,9 +420,13 @@ function Estoque() {
   }
 
   async function deletarProduto(id) {
-    const confirmar = window.confirm(
-      "Tem certeza que deseja excluir este produto?",
-    );
+    const produto = produtos.find((p) => String(p.id) === String(id));
+    const confirmar = await confirmarExclusao({
+      titulo: "Excluir produto?",
+      mensagem: produto
+        ? `"${produto.nome}" será removido do estoque e não poderá ser recuperado.`
+        : "Este produto será removido do estoque e não poderá ser recuperado.",
+    });
     if (!confirmar) return;
 
     try {
@@ -434,8 +439,7 @@ function Estoque() {
     } catch (erro) {
       console.error("Erro ao excluir produto:", erro.response?.data ?? erro);
       alerta.erro(
-        erro.response?.data?.message ??
-          "Não foi possível excluir o produto. Ele pode ter movimentações vinculadas ou a rota pode ser diferente.",
+        mensagemDaApi(erro, "Não foi possível excluir o produto. Ele pode ter movimentações vinculadas."),
       );
     }
   }

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as S from "./SideBar.Styled.jsx";
 import { useNavigate } from "react-router-dom";
 import { LuPawPrint } from "react-icons/lu";
 import { useTema } from "../../context/TemaContext.jsx";
 import { lerToken, sair as limparToken } from "../../service/auth.js";
+import { obterPerfil, salvarPreferencias, EVENTO_PERFIL, iniciaisUsuario } from "../../service/perfil.js";
 
 import {
   House,
@@ -17,6 +18,7 @@ import {
   SquareArrowRightExit,
   Sun,
   Moon,
+  UserRound,
 } from "lucide-react";
 
 const CHAVE_RECOLHIDA = "petshop:menu-recolhido";
@@ -32,16 +34,22 @@ const paginas = [
   { nome: "Relatórios", rota: "/Relatorios", Icone: ChartColumn },
 ];
 
-// iniciais para o avatar: "Ryan Santana" -> "RS", "ryan@email.com" -> "R"
-function iniciais(texto = "") {
-  const nome = String(texto).split("@")[0].trim();
-  const partes = nome.split(/[\s._-]+/).filter(Boolean);
-  return (partes.slice(0, 2).map((p) => p[0].toUpperCase()).join("") || "?");
-}
 
 function SideBar() {
   const navigate = useNavigate();
-  const { escuro, alternarTema } = useTema();
+
+  // lista de módulos: sem barra de rolagem; um esmaecido indica que há mais itens
+  const refLista = useRef(null);
+  const [sombras, setSombras] = useState({ topo: false, base: false });
+  function medirLista() {
+    const el = refLista.current;
+    if (!el) return;
+    setSombras({
+      topo: el.scrollTop > 2,
+      base: el.scrollTop + el.clientHeight < el.scrollHeight - 2,
+    });
+  }
+  const { escuro, alternarTema, definirEscuro } = useTema();
 
   // lembra se o menu estava aberto ou recolhido
   const [recolhida, setRecolhida] = useState(() => {
@@ -66,10 +74,47 @@ function SideBar() {
     });
   }
 
-  // dados do usuário logado (vem do token JWT)
+  // recalcula o esmaecido ao abrir/recolher o menu ou mudar o tamanho da janela
+  useEffect(() => {
+    medirLista();
+    window.addEventListener("resize", medirLista);
+    return () => window.removeEventListener("resize", medirLista);
+  }, [recolhida]);
+
+
+  // dados do usuário logado: começa pelo token e depois usa o nome salvo no perfil
   const usuario = lerToken();
-  const nomeUsuario = usuario?.nome ?? usuario?.name ?? usuario?.sub ?? "Meu perfil";
-  const emailUsuario = usuario?.email ?? (String(usuario?.sub ?? "").includes("@") ? usuario.sub : "");
+  const emailToken = usuario?.email ?? (String(usuario?.sub ?? "").includes("@") ? usuario.sub : "");
+  const [perfil, setPerfil] = useState(null);
+
+  useEffect(() => {
+    let ativo = true;
+    obterPerfil()
+      .then((dados) => {
+        if (!ativo) return;
+        setPerfil(dados);
+        // aplica o tema salvo na conta (vale em qualquer computador)
+        if (typeof dados?.preferencias?.modoEscuro === "boolean") definirEscuro(dados.preferencias.modoEscuro);
+      })
+      .catch(() => {}); // sem perfil: fica com os dados do token
+
+    const aoAtualizar = (e) => setPerfil((atual) => ({ ...atual, ...e.detail }));
+    window.addEventListener(EVENTO_PERFIL, aoAtualizar);
+    return () => {
+      ativo = false;
+      window.removeEventListener(EVENTO_PERFIL, aoAtualizar);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const emailUsuario = perfil?.email ?? emailToken;
+  const nomeUsuario = perfil?.nome || usuario?.nome || emailUsuario || "Meu perfil";
+
+  // botão de lua/sol: troca o tema e salva na conta
+  function trocarTema() {
+    alternarTema();
+    salvarPreferencias({ modoEscuro: !escuro }).catch(() => {});
+  }
 
   function sair() {
     limparToken();
@@ -78,6 +123,7 @@ function SideBar() {
   }
 
   const textoTema = escuro ? "Modo claro" : "Modo noturno";
+  const iniciais = iniciaisUsuario(perfil?.nome || usuario?.nome, emailUsuario);
 
   return (
     <S.SideBarContainer className="ps-tema" $recolhida={recolhida}>
@@ -102,7 +148,14 @@ function SideBar() {
 
       {!recolhida && <S.Secao>Módulos do sistema</S.Secao>}
 
-      <S.SideBardiv $recolhida={recolhida} aria-label="Menu principal">
+      <S.SideBardiv
+        ref={refLista}
+        onScroll={medirLista}
+        $recolhida={recolhida}
+        $sombraTopo={sombras.topo}
+        $sombraBase={sombras.base}
+        aria-label="Menu principal"
+      >
         {paginas.map(({ nome, rota, Icone }) => (
           <S.Nlink
             key={rota}
@@ -118,26 +171,23 @@ function SideBar() {
       </S.SideBardiv>
 
       <S.Rodape>
+        {/* recolhida: avatar e botões um embaixo do outro; aberta: tudo em uma linha */}
         <S.ProfileContainer $recolhida={recolhida}>
-          <S.ProfileAvatar title={recolhida ? nomeUsuario : undefined} aria-hidden="true">
-            {iniciais(nomeUsuario)}
-          </S.ProfileAvatar>
+          <S.UsuarioRodape $recolhida={recolhida} title={recolhida ? nomeUsuario : undefined}>
+            <S.ProfileAvatar aria-hidden="true">{iniciais}</S.ProfileAvatar>
+            {!recolhida && (
+              <S.ProfileInfo>
+                <strong>{nomeUsuario}</strong>
+                {emailUsuario && emailUsuario !== nomeUsuario && <span>{emailUsuario}</span>}
+              </S.ProfileInfo>
+            )}
+          </S.UsuarioRodape>
 
-          {!recolhida && (
-            <S.ProfileInfo>
-              <strong title={nomeUsuario}>{nomeUsuario}</strong>
-              {emailUsuario && emailUsuario !== nomeUsuario && (
-                <span title={emailUsuario}>{emailUsuario}</span>
-              )}
-            </S.ProfileInfo>
-          )}
+          <S.BotaoPerfil to="/Perfil" title="Meu perfil" aria-label="Meu perfil">
+            <UserRound size={18} />
+          </S.BotaoPerfil>
 
-          <S.BotaoSair
-            type="button"
-            onClick={alternarTema}
-            title={textoTema}
-            aria-label={textoTema}
-          >
+          <S.BotaoSair type="button" onClick={trocarTema} title={textoTema} aria-label={textoTema}>
             {escuro ? <Sun size={18} /> : <Moon size={18} />}
           </S.BotaoSair>
 

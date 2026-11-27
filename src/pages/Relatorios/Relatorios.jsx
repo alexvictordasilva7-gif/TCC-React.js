@@ -16,6 +16,7 @@ import {
   LabelList,
 } from "recharts";
 import CabecalhoPagina from "../../components/CabecalhoPagina/CabecalhoPagina.jsx";
+import HistoricoMensal from "./HistoricoMensal.jsx";
 import { useDados } from "../../context/DadosContext";
 import { servicosPet } from "../../utils/opcoes";
 import api from "../../service/api";
@@ -710,6 +711,9 @@ function Relatorios() {
           </div>
         </S.Painel>
       </S.GradePaineis>
+
+      {/* histórico mensal de serviços (usa o mês escolhido no topo) */}
+      <HistoricoMensal mes={mes} />
     </S.Pagina>
   );
 }
